@@ -138,7 +138,8 @@ function byId(id){ return document.getElementById(id) }
 function formatNumber(n){ return new Intl.NumberFormat('fr-FR').format(n) }
 function euro(n){ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n||0) }
 function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
-function loadDB(){ try{ const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):defaultDB(); }catch(e){ return defaultDB(); } }
+function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); try{ window.db = db; }catch(e){} }
+function loadDB(){ try{ const raw=localStorage.getItem(STORAGE_KEY); const d = raw?JSON.parse(raw):defaultDB(); try{ window.db = d; }catch(e){} return d; }catch(e){ const d = defaultDB(); try{ window.db = d; }catch(e){} return d; } }
 
 // Affiche une petite pastille quand l'app utilise le simulateur local (offline)
 function showSimulatorBadge(){
