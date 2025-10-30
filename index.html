@@ -169,6 +169,19 @@ function dealById(id){ return db.deals.find(d=>d.id===id)||null }
 function offerById(id){ return db.offers.find(o=>o.id===id)||null }
 function placementById(id){ return db.placements.find(p=>p.id===id)||null }
 
+// Extract readable message from server error objects or JSON strings
+function readableError(err){
+  try{
+    const msg = err?.message || err;
+    if(!msg) return 'Erreur serveur';
+    // If message is a JSON string like '{"error":"..."}', parse it
+    if(typeof msg === 'string' && msg.trim().startsWith('{')){
+      try{ const o = JSON.parse(msg); return o.error || o.message || JSON.stringify(o); }catch(e){}
+    }
+    return typeof msg === 'string' ? msg : String(msg);
+  }catch(e){ return 'Erreur serveur'; }
+}
+
 /* =========================
    NAV
 ========================= */
@@ -242,7 +255,10 @@ function renderDashboard(root){
 async function renderStudents(root){
   if(!renderStudents._hydrated){
     try{ const remote = await API.get('students'); if(Array.isArray(remote)) { db.students = remote; saveDB(); } }
-    catch(e){ console.warn('API students error', e); }
+    catch(e){
+      console.warn('API students error', e);
+      alert('Erreur lors du chargement des étudiants : ' + readableError(e));
+    }
     renderStudents._hydrated = true;
   }
   root.innerHTML = `
@@ -343,7 +359,7 @@ async function saveNewStudent(){
     closeModal(); route();
   }catch(err){
     console.error('saveNewStudent error', err);
-    alert('Erreur lors de la création : ' + (err?.message || err));
+    alert('Erreur lors de la création : ' + readableError(err));
   }
 }
 function openEditStudent(id){
