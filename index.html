@@ -163,7 +163,12 @@
         return null;
       }catch(err){
         // On any fetch error, fallback to local simulator (so app keeps working offline)
-        console.warn(`${method} ${url} failed, using local simulator:`, err);
+        if(!window.__api_simulator_logged){
+          console.warn(`${method} ${url} failed, using local simulator:`, err);
+          window.__api_simulator_logged = true;
+        }
+        // show a small badge in the UI to indicate offline/simulated mode
+        try{ showSimulatorBadge(); }catch(e){}
         return localSim(method, path, body);
       }
     }
@@ -208,6 +213,19 @@ function formatNumber(n){ return new Intl.NumberFormat('fr-FR').format(n) }
 function euro(n){ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n||0) }
 function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
 function loadDB(){ try{ const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):defaultDB(); }catch(e){ return defaultDB(); } }
+
+// Affiche une petite pastille quand l'app utilise le simulateur local (offline)
+function showSimulatorBadge(){
+  try{
+    if(window.__api_sim_shown) return;
+    window.__api_sim_shown = true;
+    const el = document.createElement('div');
+    el.id = 'simBadge';
+    el.style.cssText = 'position:fixed; right:12px; bottom:12px; padding:8px 12px; background:rgba(255,165,0,0.10); color:var(--text); border:1px solid rgba(255,165,0,0.18); border-radius:12px; z-index:9999; font-weight:700; backdrop-filter: blur(4px);';
+    el.innerText = 'Mode simulateur (offline)';
+    document.body.appendChild(el);
+  }catch(e){ /* silent */ }
+}
 
 function tag(cls, text){ return `<span class="tag ${cls||''}">${text}</span>` }
 function statusTag(status){
