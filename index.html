@@ -75,8 +75,6 @@
   .modal[aria-hidden="false"]{ display:flex !important; pointer-events:auto; }
   /* Make sure toolbar controls accept pointer events (some overlays could block them) */
   .toolbar, .toolbar * { pointer-events:auto; }
-  /* Ensure simulator badge doesn't block interactions */
-  #simBadge { pointer-events: none; }
     .modal header{ position:sticky; top:0; background:transparent; border:0 }
     .modal .head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.06) }
     .modal .head h3{ margin:0 } .modal .foot{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px }
@@ -150,17 +148,7 @@ function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); try{ w
 function loadDB(){ try{ const raw=localStorage.getItem(STORAGE_KEY); const d = raw?JSON.parse(raw):defaultDB(); try{ window.db = d; }catch(e){} return d; }catch(e){ const d = defaultDB(); try{ window.db = d; }catch(e){} return d; } }
 
 // Affiche une petite pastille quand l'app utilise le simulateur local (offline)
-function showSimulatorBadge(){
-  try{
-    if(window.__api_sim_shown) return;
-    window.__api_sim_shown = true;
-    const el = document.createElement('div');
-    el.id = 'simBadge';
-    el.style.cssText = 'position:fixed; right:12px; bottom:12px; padding:8px 12px; background:rgba(255,165,0,0.10); color:var(--text); border:1px solid rgba(255,165,0,0.18); border-radius:12px; z-index:9999; font-weight:700; backdrop-filter: blur(4px);';
-    el.innerText = 'Mode simulateur (offline)';
-    document.body.appendChild(el);
-  }catch(e){ /* silent */ }
-}
+// simulator mode removed — UI badge no longer used
 
 function tag(cls, text){ return `<span class="tag ${cls||''}">${text}</span>` }
 function statusTag(status){
@@ -1115,11 +1103,32 @@ function closeModal(){
 /* =========================
    EXPORT / IMPORT / RESET
 ========================= */
-byId('exportBtn').addEventListener('click', ()=>{
-  const data=JSON.stringify(db,null,2);
-  const url=URL.createObjectURL(new Blob([data],{type:"application/json"}));
-  const a=document.createElement('a'); a.href=url; a.download='crm-suivi-export.json'; a.click(); URL.revokeObjectURL(url);
-});
+function openExportModal(){
+  const body = `
+    <div class="two">
+      <div>
+        <label>Export CSV — Entités</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" onclick="(window.exportCSV || (()=>alert('Export non disponible')) )('students','students.csv')">Étudiants (CSV)</button>
+          <button class="btn" onclick="(window.exportCSV || (()=>alert('Export non disponible')) )('companies','companies.csv')">Entreprises (CSV)</button>
+          <button class="btn" onclick="(window.exportCSV || (()=>alert('Export non disponible')) )('offers','offers.csv')">Offres (CSV)</button>
+          <button class="btn" onclick="(window.exportCSV || (()=>alert('Export non disponible')) )('deals','deals.csv')">Opportunités (CSV)</button>
+          <button class="btn" onclick="(window.exportCSV || (()=>alert('Export non disponible')) )('tasks','tasks.csv')">Tâches (CSV)</button>
+          <button class="btn" onclick="(window.exportCSV || (()=>alert('Export non disponible')) )('interactions','interactions.csv')">Interactions (CSV)</button>
+        </div>
+      </div>
+      <div>
+        <label>Export global</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn primary" onclick="(window.exportAllJSON || (()=>{ const data=JSON.stringify(db,null,2); const url=URL.createObjectURL(new Blob([data],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download='crm-suivi-export.json'; a.click(); URL.revokeObjectURL(url); }))()">Exporter tout (JSON)</button>
+          <div class="muted" style="margin-top:8px">CSV exporte uniquement chaque entité en séparé (colonnes top-level ; objets imbriqués sérialisés).</div>
+        </div>
+      </div>
+    </div>
+  `;
+  openModal('Export — Choix', body, `<button class="btn" onclick="closeModal()">Fermer</button>`);
+}
+byId('exportBtn').addEventListener('click', openExportModal);
 byId('importInput').addEventListener('change', (e)=>{
   const file=e.target.files?.[0]; if(!file) return;
   const reader=new FileReader(); reader.onload=ev=>{
