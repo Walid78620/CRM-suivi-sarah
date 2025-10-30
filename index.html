@@ -69,6 +69,14 @@
     footer{ opacity:.6; text-align:center; padding:24px 0; font-size:12px }
     .modal{ position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(3,8,20,.6); backdrop-filter: blur(6px);}
     .modal .box{ width:min(860px, 96vw); max-height:86vh; overflow:auto; background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.1); border-radius:18px; box-shadow:var(--shadow); padding:18px;}
+
+  /* Accessibility & interaction fixes: ensure hidden modal doesn't capture pointer events */
+  .modal[aria-hidden="true"]{ display:none !important; pointer-events:none; }
+  .modal[aria-hidden="false"]{ display:flex !important; pointer-events:auto; }
+  /* Make sure toolbar controls accept pointer events (some overlays could block them) */
+  .toolbar, .toolbar * { pointer-events:auto; }
+  /* Ensure simulator badge doesn't block interactions */
+  #simBadge { pointer-events: none; }
     .modal header{ position:sticky; top:0; background:transparent; border:0 }
     .modal .head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.06) }
     .modal .head h3{ margin:0 } .modal .foot{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px }
