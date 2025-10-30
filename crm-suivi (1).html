@@ -1,1 +1,1371 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'><title>CRM & Suivi</title></head><body><div id='app'></div></body></html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRM & Suivi — Application unifiée</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111a2e;
+      --muted:#1a2540;
+      --card:#121a2e;
+      --text:#e7ecf7;
+      --sub:#9fb0d1;
+      --brand:#5aa9ff;
+      --ok:#2dd4bf;
+      --warn:#fbbf24;
+      --danger:#ef4444;
+      --shadow:0 8px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      background: linear-gradient(180deg, #0b1220, #0b1326 40%, #0a142a);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      background:rgba(11,18,32,.75);
+      backdrop-filter:saturate(140%) blur(12px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .bar{
+      display:flex; align-items:center; gap:12px;
+      padding:14px 18px; max-width:1200px; margin:0 auto;
+    }
+    .logo{
+      display:flex; align-items:center; gap:12px; font-weight:700; letter-spacing:.2px;
+    }
+    .logo .dot{width:12px;height:12px;border-radius:50%;background:var(--brand); box-shadow:0 0 0 4px rgba(90,169,255,.15)}
+    nav{
+      display:flex; flex-wrap:wrap; gap:6px; margin-left:18px;
+    }
+    nav button{
+      appearance:none; border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      color:var(--text); padding:8px 12px; border-radius:12px;
+      cursor:pointer; transition:.15s transform, .15s background;
+      font-weight:600; letter-spacing:.2px; font-size:14px;
+    }
+    nav button.active{ background:var(--brand); border-color:transparent; color:#081020; }
+    nav button:hover{ transform:translateY(-1px); background:rgba(255,255,255,.06) }
+    .spacer{flex:1}
+    .actions{display:flex; gap:8px}
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
+      color:var(--text); padding:8px 12px; border-radius:12px; cursor:pointer; font-weight:600; font-size:14px;
+    }
+    .btn.primary{ background:var(--brand); color:#081020; border-color:transparent }
+    .btn.ghost{ background:transparent }
+    .wrap{ max-width:1200px; margin:22px auto; padding:0 18px 34px }
+    .grid{ display:grid; gap:14px }
+    .cards{ grid-template-columns: repeat(4, minmax(0, 1fr)) }
+    @media (max-width:1100px){ .cards{ grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+    @media (max-width:640px){ .cards{ grid-template-columns: 1fr } }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
+    }
+    .stat{
+      display:flex; flex-direction:column; gap:6px
+    }
+    .stat .kpi{ font-size:26px; font-weight:800; letter-spacing:.2px }
+    .stat small{ color:var(--sub) }
+    h2{ margin:22px 0 12px 4px; font-size:20px }
+    table{ width:100%; border-collapse:collapse; font-size:14px }
+    th, td{ padding:10px 12px; border-bottom:1px dashed rgba(255,255,255,.07) }
+    th{ text-align:left; color:#c8d5f1; font-weight:700; letter-spacing:.2px }
+    tr:hover td{ background:rgba(255,255,255,.03) }
+    .tag{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12); font-size:12px; font-weight:700; letter-spacing:.2px }
+    .tag.ok{ background:rgba(45,212,191,.12); border-color:rgba(45,212,191,.35); color:var(--ok) }
+    .tag.warn{ background:rgba(251,191,36,.12); border-color:rgba(251,191,36,.35); color:var(--warn) }
+    .tag.danger{ background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.35); color:var(--danger) }
+    .muted{ color:var(--sub) }
+    .row-actions{ display:flex; gap:6px }
+    .row-actions .btn{ padding:6px 10px; font-size:12px }
+    .toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin:6px 0 14px }
+    .toolbar .filters{ display:flex; gap:8px; flex-wrap:wrap }
+    input, select, textarea{
+      width:100%; padding:10px 12px; background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12); color:var(--text); border-radius:12px; outline:none;
+    }
+    label{ display:block; font-size:12px; color:#c8d5f1; margin:10px 2px 6px }
+    .two{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    .three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px }
+    .four{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px }
+    @media (max-width:900px){ .two, .three, .four{ grid-template-columns:1fr } }
+    .pill{ padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05) }
+    .progress{ height:8px; width:100%; background:rgba(255,255,255,.08); border-radius:8px; overflow:hidden }
+    .progress>span{ display:block; height:100%; background:linear-gradient(90deg, var(--brand), #7ee3ff); }
+    .kanban{ display:grid; gap:14px; grid-template-columns: repeat(6, minmax(240px,1fr)); overflow:auto; padding-bottom:6px }
+    .col{ background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius); padding:10px; min-height:140px }
+    .col h3{ margin:6px 8px 10px; font-size:14px; text-transform:uppercase; letter-spacing:.3px; color:#c8d5f1 }
+    .deal{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px; margin:8px 4px }
+    .deal .top{ display:flex; justify-content:space-between; gap:8px; font-weight:700 }
+    .deal .meta{ font-size:12px; color:var(--sub); display:flex; flex-wrap:wrap; gap:10px; margin-top:6px }
+    .empty{ color:var(--sub); font-style:italic; padding:10px }
+    .link{ color:var(--brand); cursor:pointer; text-decoration:underline }
+    .pillbtn{ background:transparent; border:1px dashed rgba(255,255,255,.2); padding:8px 10px; border-radius:999px; color:var(--text); cursor:pointer }
+    footer{ opacity:.6; text-align:center; padding:24px 0; font-size:12px }
+    /* Modal */
+    .modal{
+      position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:20px;
+      background:rgba(3,8,20,.6); backdrop-filter: blur(6px);
+    }
+    .modal .box{
+      width:min(860px, 96vw);
+      max-height:86vh; overflow:auto;
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.1); border-radius:18px;
+      box-shadow:var(--shadow); padding:18px;
+    }
+    .modal header{ position:sticky; top:0; background:transparent; border:0 }
+    .modal .head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.06) }
+    .modal .head h3{ margin:0 }
+    .modal .foot{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px }
+    /* Small helpers */
+    .muted-link{ color:#c8d5f1; text-decoration:underline; cursor:pointer }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="logo"><div class="dot"></div> CRM & Suivi</div>
+      <nav id="nav"></nav>
+      <div class="spacer"></div>
+      <div class="actions">
+        <button class="btn ghost" id="exportBtn" title="Exporter les données en JSON">Exporter</button>
+        <label class="btn ghost" for="importInput" title="Importer un JSON">Importer</label>
+        <input id="importInput" type="file" accept="application/json" style="display:none" />
+        <button class="btn" id="resetBtn" title="Réinitialiser la base (attention)">Réinitialiser</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div id="app"></div>
+  </div>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="box">
+      <div class="head">
+        <h3 id="modalTitle">Titre</h3>
+        <button class="btn" onclick="closeModal()">Fermer</button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="foot" id="modalFoot"></div>
+    </div>
+  </div>
+
+  <footer>CRM & Suivi · Application unifiée · localStorage + API · v1.0</footer>
+
+  <!-- === Client API (Netlify Functions) ================================== -->
+  <script>
+  const API = {
+    get:  (path) => fetch(`/api/${path}`).then(r => r.json()),
+    post: (path, body) => fetch(`/api/${path}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r=>r.json()),
+    patch:(path, body) => fetch(`/api/${path}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }).then(r=>r.json()),
+    del:  (path, body) => fetch(`/api/${path}`, { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+  };
+  </script>
+
+<script>
+/* ---------------------------
+   DATA LAYER
+---------------------------- */
+const STORAGE_KEY = "crm_suivi_db_v1";
+
+const defaultDB = () => ({
+  students: [{
+    id: uid(), name: "Lina Martin", email:"lina.martin@email.com", phone:"06 11 22 33 44",
+    coaching: {
+      cv:{status:"En cours", progress:75, notes:"Revoir la partie expériences."},
+      linkedin:{status:"En cours", progress:60, notes:"Bannière et À-propos à compléter."},
+      interview:{status:"À commencer", progress:10, notes:"Simulation prévue mardi."},
+      lastUpdate: today()
+    },
+    placements: [], tasks: []
+  },{
+    id: uid(), name: "Yanis Belaïd", email:"yanis.belaid@email.com", phone:"07 55 66 77 88",
+    coaching: {
+      cv:{status:"Terminé", progress:100, notes:"OK"},
+      linkedin:{status:"Terminé", progress:100, notes:"OK"},
+      interview:{status:"En cours", progress:60, notes:"Améliorer pitch 1 min."},
+      lastUpdate: today()
+    },
+    placements: [], tasks: []
+  }],
+  companies: [{
+    id: uid(), name:"TechInnovate", sector:"Tech", size:"250-500", address:"Paris 9e",
+    website:"https://example.com", status:"Partenaire actif", relationLevel:"Excellent",
+    conventionSigned:true, conventionDate:"2024-09-01", partnerSince:"2023-03-02",
+    capacity:5, placedStudents:1, lastContactDate:"2025-10-15", notes:"Aiment les profils marketing + data.",
+    contacts: [], offers: [], placements: [], interactions: [], deals: []
+  },{
+    id: uid(), name:"GreenLogix", sector:"Logistique", size:"50-100", address:"Saint-Denis",
+    website:"", status:"Potentiel", relationLevel:"À développer",
+    conventionSigned:false, capacity:2, placedStudents:0, lastContactDate:"2025-09-30", notes:"Découverte salon Pro.",
+    contacts: [], offers: [], placements: [], interactions: [], deals: []
+  }],
+  deals: [{
+    id: uid(), companyId: null, contactName:"Claire Dupont", contactPosition:"DRH", email:"claire@techinnovate.com",
+    phone:"", mobile:"", source:"LinkedIn", status:"Qualifié", priority:"Haute", dealValue:20000, probability:40,
+    expectedCloseDate:"2025-12-10", notes:"Package partenariat alternance", lastContactDate:"2025-10-20",
+    interactions: [], tasks: []
+  }],
+  offers: [{
+    id: uid(), companyId: null, title:"Assistant Marketing Digital", type:"Alternance", domain:"Marketing",
+    duration:"12 mois", spots:2, startDate:"2025-11-15", status:"Ouverte", notes:"Google Ads + Social."
+  }],
+  placements: [],
+  interactions: [],
+  tasks: [{
+    id: uid(), title:"Relancer TechInnovate pour convention", dueDate:addDays(3), completed:false,
+    assignedTo:"Vous", priority:"Haute", companyId:null, dealId:null, studentId:null
+  }]
+});
+
+let db = loadDB();
+
+/* ---------------------------
+   UTILITIES
+---------------------------- */
+function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36) }
+function today(){ return new Date().toISOString().slice(0,10) }
+function addDays(n){
+  const d = new Date(); d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function saveDB(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw){ 
+      const seed = defaultDB();
+      // link seeded offer & deal to TechInnovate
+      const company = seed.companies[0];
+      seed.deals[0].companyId = company.id;
+      company.deals.push(seed.deals[0].id);
+      seed.offers[0].companyId = company.id;
+      company.offers.push(seed.offers[0].id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(raw);
+  }catch(e){
+    console.error("Load error", e);
+    const seed = defaultDB();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+    return seed;
+  }
+}
+function formatNumber(n){ return new Intl.NumberFormat('fr-FR').format(n) }
+function euro(n){ return new Intl.NumberFormat('fr-FR', {style:'currency', currency:'EUR' }).format(n) }
+function sum(arr, fn){ return arr.reduce((a,x)=>a+(fn?fn(x):x),0) }
+function avg(arr, fn){ if(!arr.length) return 0; return sum(arr, fn)/arr.length }
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)) }
+function percent(n){ return clamp(Math.round(n),0,100) }
+function byId(id){ return document.getElementById(id) }
+function tag(cls, text){ return `<span class="tag ${cls||''}">${text}</span>` }
+function statusTag(status){
+  const map = { "Nouveau":"warn", "Contacté":"warn", "Qualifié":"ok", "Proposition":"warn", "Négociation":"warn", "Gagné":"ok", "Perdu":"danger" };
+  return tag(map[status]||"", status);
+}
+function employabilityStatus(s){
+  const c = s.coaching;
+  const ready = c.cv.progress>=100 && c.linkedin.progress>=100 && c.interview.progress>=100;
+  if(ready) return tag("ok","Prêt");
+  const mean = Math.round((c.cv.progress + c.linkedin.progress + c.interview.progress)/3);
+  if(mean >= 60) return tag("warn","En cours");
+  return tag("","À accompagner");
+}
+function companyById(id){ return db.companies.find(c=>c.id===id) || null }
+function studentById(id){ return db.students.find(s=>s.id===id) || null }
+function dealById(id){ return db.deals.find(d=>d.id===id) || null }
+function offerById(id){ return db.offers.find(o=>o.id===id) || null }
+function placementById(id){ return db.placements.find(p=>p.id===id) || null }
+
+/* ---------------------------
+   NAV & APP STATE
+---------------------------- */
+const VIEWS = [
+  {id:"dashboard", label:"🏠 Dashboard"},
+  {id:"students", label:"🎓 Étudiants"},
+  {id:"companies", label:"🏢 Entreprises"},
+  {id:"offers", label:"💼 Offres & Placements"},
+  {id:"pipeline", label:"📊 Pipeline Com"},
+  {id:"tasks", label:"✅ Tâches"},
+  {id:"history", label:"📝 Historique"}
+];
+let currentView = "dashboard";
+function renderNav(){
+  const nav = byId('nav');
+  nav.innerHTML = VIEWS.map(v=>`<button class="${v.id===currentView?'active':''}" onclick="go('${v.id}')">${v.label}</button>`).join("");
+}
+function go(id){
+  currentView = id;
+  renderNav();
+  route();
+}
+
+/* ---------------------------
+   ROUTER
+---------------------------- */
+function route(){
+  const root = byId('app');
+  if(currentView==="dashboard") return renderDashboard(root);
+  if(currentView==="students") return renderStudents(root);
+  if(currentView==="companies") return renderCompanies(root);
+  if(currentView==="offers") return renderOffersPlacements(root);
+  if(currentView==="pipeline") return renderPipeline(root);
+  if(currentView==="tasks") return renderTasks(root);
+  if(currentView==="history") return renderHistory(root);
+}
+
+/* ---------------------------
+   DASHBOARD
+---------------------------- */
+function renderDashboard(root){
+  // KPIs
+  const totalStudents = db.students.length;
+  const avgEmploy = Math.round(avg(db.students, s => (s.coaching.cv.progress + s.coaching.linkedin.progress + s.coaching.interview.progress)/3 ));
+  const ready = db.students.filter(s => s.coaching.cv.progress>=100 && s.coaching.linkedin.progress>=100 && s.coaching.interview.progress>=100).length;
+
+  const totalCompanies = db.companies.length;
+  const activePartners = db.companies.filter(c=>c.status && c.status.toLowerCase().includes("actif")).length;
+  const totalCapacity = sum(db.companies, c=>c.capacity||0);
+  const convSigned = db.companies.filter(c=>c.conventionSigned).length;
+
+  const openOffers = db.offers.filter(o=>o.status==="Ouverte").length;
+  const totalSpots = sum(db.offers.filter(o=>o.status==="Ouverte"), o=>o.spots||0);
+
+  const byStatus = (status) => sum(db.deals.filter(d=>d.status===status), d=>d.dealValue||0);
+  const pipelineValue = sum(db.deals, d=>d.dealValue||0);
+  const weighted = sum(db.deals, d=> (d.dealValue||0) * ((d.probability||0)/100) );
+
+  const placed = db.placements.length;
+
+  root.innerHTML = `
+    <div class="grid cards">
+      <div class="card stat"><div>Étudiants suivis</div><div class="kpi">${totalStudents}</div><small>${ready} “prêts à l’emploi”</small></div>
+      <div class="card stat"><div>Employabilité moyenne</div><div class="kpi">${percent(avgEmploy)}%</div><div class="progress"><span style="width:${percent(avgEmploy)}%"></span></div></div>
+      <div class="card stat"><div>Entreprises partenaires</div><div class="kpi">${totalCompanies}</div><small>${activePartners} actifs · ${convSigned} conventions</small></div>
+      <div class="card stat"><div>Offres ouvertes</div><div class="kpi">${openOffers}</div><small>${totalSpots} postes</small></div>
+      <div class="card stat"><div>Pipeline (valeur)</div><div class="kpi">${euro(pipelineValue)}</div><small>Pondéré: ${euro(Math.round(weighted))}</small></div>
+      <div class="card stat"><div>En Négociation</div><div class="kpi">${euro(byStatus("Négociation"))}</div><small>Qualifié: ${euro(byStatus("Qualifié"))}</small></div>
+      <div class="card stat"><div>Capacité d’accueil</div><div class="kpi">${totalCapacity}</div><small>Étudiants placés: ${placed}</small></div>
+      <div class="card stat"><div>Dernières MAJ</div><div class="kpi">Journal</div><small><span class="muted-link" onclick="go('history')">Voir l’historique</span></small></div>
+    </div>
+  `;
+
+  // Recent students & offers preview
+  const recentStudents = [...db.students].slice(-5);
+  const recentOffers = [...db.offers].filter(o=>o.status==="Ouverte").slice(-5);
+
+  const block = document.createElement('div');
+  block.innerHTML = `
+    <h2>Aperçu</h2>
+    <div class="grid two">
+      <div class="card">
+        <div class="toolbar">
+          <strong>Derniers étudiants</strong>
+          <button class="btn pillbtn" onclick="openAddStudent()">+ Ajouter</button>
+        </div>
+        <table>
+          <thead><tr><th>Étudiant</th><th>Employabilité</th><th>Dernière MAJ</th><th></th></tr></thead>
+          <tbody>
+            ${recentStudents.map(s=>{
+              const mean = percent((s.coaching.cv.progress + s.coaching.linkedin.progress + s.coaching.interview.progress)/3);
+              return `<tr>
+                <td>${s.name}<div class="muted">${s.email}</div></td>
+                <td style="min-width:180px">
+                  <div class="progress"><span style="width:${mean}%"></span></div>
+                  <small class="muted">${employabilityStatus(s)}</small>
+                </td>
+                <td class="muted">${s.coaching.lastUpdate||""}</td>
+                <td class="row-actions">
+                  <button class="btn" onclick="openEditStudent('${s.id}')">Éditer</button>
+                  <button class="btn" onclick="viewStudent('${s.id}')">Voir</button>
+                </td>
+              </tr>`
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="toolbar">
+          <strong>Offres ouvertes</strong>
+          <button class="btn pillbtn" onclick="openAddOffer()">+ Nouvelle offre</button>
+        </div>
+        <table>
+          <thead><tr><th>Intitulé</th><th>Entreprise</th><th>Début</th><th>Places</th><th></th></tr></thead>
+          <tbody>
+            ${recentOffers.map(o=>{
+              const comp = companyById(o.companyId);
+              return `<tr>
+                <td>${o.title}<div class="muted">${o.type} · ${o.domain||""}</div></td>
+                <td>${comp?comp.name:"—"}</td>
+                <td>${o.startDate||"—"}</td>
+                <td>${o.spots||0}</td>
+                <td class="row-actions">
+                  <button class="btn" onclick="matchStudents('${o.id}')">Matcher</button>
+                </td>
+              </tr>`
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  root.appendChild(block);
+}
+
+/* ---------------------------
+   STUDENTS
+---------------------------- */
+async function renderStudents(root){
+  // Hydratation depuis l'API (une seule fois)
+  if (!renderStudents._hydrated) {
+    try {
+      const remote = await API.get('students');
+      if (Array.isArray(remote)) { db.students = remote; saveDB(); }
+    } catch(e){ console.warn('API students error', e); }
+    renderStudents._hydrated = true;
+  }
+
+  const list = db.students;
+  root.innerHTML = `
+    <div class="toolbar">
+      <div class="filters">
+        <input id="stuSearch" placeholder="Rechercher étudiant (nom, email)..." oninput="renderStudents(byId('app'))" />
+      </div>
+      <div>
+        <button class="btn primary" onclick="openAddStudent()">+ Ajouter un étudiant</button>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Étudiant</th><th>Contact</th><th>Employabilité</th><th>Statut</th><th>MAJ</th><th></th></tr></thead>
+        <tbody id="studentsRows"></tbody>
+      </table>
+    </div>
+  `;
+  const q = (byId('stuSearch')?.value||"").toLowerCase();
+  const rows = list.filter(s => !q || s.name.toLowerCase().includes(q) || (s.email||"").toLowerCase().includes(q)).map(s=>{
+    const mean = percent((s.coaching.cv.progress + s.coaching.linkedin.progress + s.coaching.interview.progress)/3);
+    return `<tr>
+      <td>${s.name}</td>
+      <td class="muted">${s.email||""}<br>${s.phone||""}</td>
+      <td style="min-width:180px"><div class="progress"><span style="width:${mean}%"></span></div></td>
+      <td>${employabilityStatus(s)}</td>
+      <td class="muted">${s.coaching?.lastUpdate||""}</td>
+      <td class="row-actions">
+        <button class="btn" onclick="viewStudent('${s.id}')">Voir</button>
+        <button class="btn" onclick="openEditStudent('${s.id}')">Éditer</button>
+        <button class="btn" onclick="deleteStudent('${s.id}')">Suppr.</button>
+      </td>
+    </tr>`
+  }).join("");
+  byId('studentsRows').innerHTML = rows || `<tr><td colspan="6" class="empty">Aucun étudiant</td></tr>`;
+}
+
+function viewStudent(id){
+  const s = studentById(id); if(!s) return;
+  openModal("Fiche étudiant — " + s.name, `
+    <div class="two">
+      <div>
+        <label>Nom</label><div class="pill">${s.name}</div>
+        <label>Email</label><div class="pill">${s.email||"—"}</div>
+        <label>Téléphone</label><div class="pill">${s.phone||"—"}</div>
+      </div>
+      <div>
+        <label>Employabilité globale</label>
+        <div class="progress"><span style="width:${percent((s.coaching.cv.progress+s.coaching.linkedin.progress+s.coaching.interview.progress)/3)}%"></span></div>
+        <div style="margin-top:6px">${employabilityStatus(s)}</div>
+      </div>
+    </div>
+    <h2>Coaching</h2>
+    <div class="three">
+      ${coachingBlock("CV", s.coaching.cv)}
+      ${coachingBlock("LinkedIn", s.coaching.linkedin)}
+      ${coachingBlock("Entretien", s.coaching.interview)}
+    </div>
+    <h2>Actions</h2>
+    <div class="row-actions">
+      <button class="btn" onclick="openEditStudent('${s.id}')">Mettre à jour</button>
+      <button class="btn" onclick="createTaskForStudent('${s.id}')">Créer une tâche</button>
+      <button class="btn" onclick="openPlacementForStudent('${s.id}')">Créer un placement</button>
+    </div>
+  `, ``);
+}
+function coachingBlock(title, obj){
+  return `<div class="card">
+    <strong>${title}</strong>
+    <div class="progress" style="margin-top:6px"><span style="width:${percent(obj.progress||0)}%"></span></div>
+    <div class="muted" style="margin-top:6px">${obj.status||""}</div>
+    <div class="muted" style="margin-top:6px"><em>${obj.notes||""}</em></div>
+  </div>`
+}
+
+function openAddStudent(){
+  const id = uid();
+  openModal("Ajouter un étudiant", `
+    <div class="two">
+      <div><label>Nom</label><input id="s_name"></div>
+      <div><label>Email</label><input id="s_email"></div>
+      <div><label>Téléphone</label><input id="s_phone"></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveNewStudent('${id}')">Enregistrer</button>`);
+}
+async function saveNewStudent(id){
+  const s = {
+    name: byId('s_name').value.trim(),
+    email: byId('s_email').value.trim(),
+    phone: byId('s_phone').value.trim(),
+    coaching:{
+      cv:{status:"À commencer", progress:0, notes:""},
+      linkedin:{status:"À commencer", progress:0, notes:""},
+      interview:{status:"À commencer", progress:0, notes:""},
+      lastUpdate: today()
+    }
+  };
+  if(!s.name){ alert("Nom requis"); return; }
+  const created = await API.post('students', s);
+  db.students.push(created); saveDB(); closeModal(); route();
+}
+function openEditStudent(id){
+  const s = studentById(id); if(!s) return;
+  openModal("Éditer étudiant — "+s.name, `
+    <div class="two">
+      <div><label>Nom</label><input id="s_name" value="${s.name}"></div>
+      <div><label>Email</label><input id="s_email" value="${s.email||""}"></div>
+      <div><label>Téléphone</label><input id="s_phone" value="${s.phone||""}"></div>
+    </div>
+    <h2>Coaching</h2>
+    <div class="three">
+      ${editCoachBlock("cv", s.coaching.cv)}
+      ${editCoachBlock("linkedin", s.coaching.linkedin)}
+      ${editCoachBlock("interview", s.coaching.interview)}
+    </div>
+  `, `<button class="btn primary" onclick="saveEditStudent('${s.id}')">Enregistrer</button>`);
+}
+function editCoachBlock(key, obj){
+  return `<div class="card">
+    <strong>${key.toUpperCase()}</strong>
+    <label>Statut</label><input id="${key}_status" value="${obj.status||""}">
+    <label>Progression (%)</label><input id="${key}_progress" type="number" min="0" max="100" value="${percent(obj.progress||0)}">
+    <label>Notes</label><textarea id="${key}_notes">${obj.notes||""}</textarea>
+  </div>`
+}
+async function saveEditStudent(id){
+  const s = studentById(id); if(!s) return;
+  s.name = byId('s_name').value.trim();
+  s.email = byId('s_email').value.trim();
+  s.phone = byId('s_phone').value.trim();
+  for (const key of ["cv","linkedin","interview"]){
+    const p = parseInt(byId(`${key}_progress`).value||"0",10);
+    s.coaching[key].status = byId(`${key}_status`).value;
+    s.coaching[key].progress = clamp(p,0,100);
+    s.coaching[key].notes   = byId(`${key}_notes`).value;
+  }
+  s.coaching.lastUpdate = today();
+
+  const updated = await API.patch('students', { id: s.id, name: s.name, email: s.email, phone: s.phone, coaching: s.coaching });
+  Object.assign(s, updated);
+  saveDB(); closeModal(); route();
+}
+async function deleteStudent(id){
+  if(!confirm("Supprimer cet étudiant ?")) return;
+  await API.del('students', { id });
+  db.students = db.students.filter(s=>s.id!==id);
+  // also remove placements & tasks linked
+  db.placements = db.placements.filter(p=>p.studentId!==id);
+  db.tasks = db.tasks.filter(t=>t.studentId!==id);
+  saveDB(); route();
+}
+function createTaskForStudent(id){
+  const s = studentById(id);
+  openModal("Nouvelle tâche — " + s.name, `
+    <label>Titre</label><input id="t_title" placeholder="Ex: Préparer entretien…">
+    <div class="two">
+      <div><label>Échéance</label><input id="t_due" type="date" value="${addDays(7)}"></div>
+      <div><label>Priorité</label>
+        <select id="t_priority"><option>Haute</option><option>Moyenne</option><option>Basse</option></select>
+      </div>
+    </div>
+  `, `<button class="btn primary" onclick="saveTask({studentId:'${id}'})">Créer</button>`);
+}
+function openPlacementForStudent(id){
+  const compOpts = db.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  openModal("Créer un placement", `
+    <div class="two">
+      <div><label>Entreprise</label><select id="pl_company">${compOpts}</select></div>
+      <div><label>Poste</label><input id="pl_position" placeholder="Intitulé du poste"></div>
+      <div><label>Type de contrat</label>
+        <select id="pl_type"><option>Alternance</option><option>Stage</option><option>CDI</option><option>CDD</option></select>
+      </div>
+      <div><label>Début</label><input id="pl_start" type="date" value="${today()}"></div>
+      <div><label>Fin</label><input id="pl_end" type="date"></div>
+    </div>
+  `, `<button class="btn primary" onclick="savePlacement('${id}')">Enregistrer</button>`);
+}
+function savePlacement(studentId){
+  const p = {
+    id: uid(),
+    studentId,
+    companyId: byId('pl_company').value,
+    position: byId('pl_position').value,
+    contractType: byId('pl_type').value,
+    startDate: byId('pl_start').value,
+    endDate: byId('pl_end').value
+  };
+  if(!p.companyId || !p.position){ alert("Entreprise et poste requis"); return; }
+  db.placements.push(p);
+  // link on company
+  const comp = companyById(p.companyId); if(comp){ comp.placements.push(p.id); comp.placedStudents = (comp.placedStudents||0)+1; }
+  saveDB(); closeModal(); route();
+}
+
+/* ---------------------------
+   COMPANIES
+---------------------------- */
+function renderCompanies(root){
+  root.innerHTML = `
+    <div class="toolbar">
+      <div class="filters">
+        <input id="compSearch" placeholder="Rechercher (nom, secteur, ville…)" oninput="renderCompanies(byId('app'))">
+        <select id="compStatus" onchange="renderCompanies(byId('app'))">
+          <option value="">— Statut relation —</option>
+          <option>Partenaire actif</option><option>Potentiel</option><option>Premier contact</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn primary" onclick="openAddCompany()">+ Ajouter une entreprise</button>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Entreprise</th><th>Relation</th><th>Capacité</th><th>Conventions</th><th>Dernier contact</th><th></th></tr></thead>
+        <tbody id="companiesRows"></tbody>
+      </table>
+    </div>
+  `;
+  const q = (byId('compSearch')?.value||"").toLowerCase();
+  const st = (byId('compStatus')?.value||"");
+  const rows = db.companies.filter(c => {
+    const hit = !q || c.name.toLowerCase().includes(q) || (c.sector||"").toLowerCase().includes(q) || (c.address||"").toLowerCase().includes(q);
+    const ok = !st || (c.status===st);
+    return hit && ok;
+  }).map(c=>`<tr>
+      <td>${c.name}<div class="muted">${c.sector||""} · ${c.size||""} · ${c.address||""}</div></td>
+      <td>${c.status?tag(c.status.includes("actif")?"ok":"warn", c.status):""} ${c.relationLevel?`· <span class="muted">${c.relationLevel}</span>`:""}</td>
+      <td>${c.capacity||0} places · ${c.placedStudents||0} placés</td>
+      <td>${c.conventionSigned?tag("ok","Signée"):tag("warn","À signer")}</td>
+      <td class="muted">${c.lastContactDate||"—"}</td>
+      <td class="row-actions">
+        <button class="btn" onclick="viewCompany('${c.id}')">Voir</button>
+        <button class="btn" onclick="openEditCompany('${c.id}')">Éditer</button>
+        <button class="btn" onclick="deleteCompany('${c.id}')">Suppr.</button>
+      </td>
+    </tr>`).join("");
+  byId('companiesRows').innerHTML = rows || `<tr><td colspan="6" class="empty">Aucune entreprise</td></tr>`;
+}
+function openAddCompany(){
+  openModal("Ajouter une entreprise", `
+    <div class="two">
+      <div><label>Nom</label><input id="c_name" placeholder="Raison sociale"></div>
+      <div><label>Secteur</label><input id="c_sector"></div>
+      <div><label>Taille</label><input id="c_size" placeholder="ex: 50-100"></div>
+      <div><label>Adresse</label><input id="c_addr"></input></div>
+      <div><label>Site</label><input id="c_site" placeholder="https://..."></div>
+      <div><label>Statut relation</label>
+        <select id="c_status"><option>Partenaire actif</option><option>Potentiel</option><option>Premier contact</option></select>
+      </div>
+      <div><label>Niveau de relation</label><input id="c_rel" placeholder="Excellent / À développer…"></div>
+      <div><label>Convention signée ?</label>
+        <select id="c_conv"><option value="true">Oui</option><option value="false">Non</option></select>
+      </div>
+      <div><label>Capacité d’accueil</label><input id="c_cap" type="number" min="0" value="0"></div>
+      <div><label>Dernier contact</label><input id="c_last" type="date" value="${today()}"></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveCompany()">Enregistrer</button>`);
+}
+function saveCompany(){
+  const c = {
+    id: uid(),
+    name: byId('c_name').value.trim(),
+    sector: byId('c_sector').value.trim(),
+    size: byId('c_size').value.trim(),
+    address: byId('c_addr').value.trim(),
+    website: byId('c_site').value.trim(),
+    status: byId('c_status').value,
+    relationLevel: byId('c_rel').value.trim(),
+    conventionSigned: byId('c_conv').value==="true",
+    capacity: parseInt(byId('c_cap').value||"0",10),
+    placedStudents:0,
+    lastContactDate: byId('c_last').value,
+    contacts:[], offers:[], placements:[], interactions:[], deals:[]
+  };
+  if(!c.name){ alert("Nom requis"); return; }
+  db.companies.push(c); saveDB(); closeModal(); route();
+}
+function openEditCompany(id){
+  const c = companyById(id); if(!c) return;
+  openModal("Éditer — " + c.name, `
+    <div class="two">
+      <div><label>Nom</label><input id="c_name" value="${c.name}"></div>
+      <div><label>Secteur</label><input id="c_sector" value="${c.sector||""}"></div>
+      <div><label>Taille</label><input id="c_size" value="${c.size||""}"></div>
+      <div><label>Adresse</label><input id="c_addr" value="${c.address||""}"></div>
+      <div><label>Site</label><input id="c_site" value="${c.website||""}"></div>
+      <div><label>Statut relation</label>
+        <select id="c_status">
+          ${["Partenaire actif","Potentiel","Premier contact"].map(o=>`<option ${o===c.status?'selected':''}>${o}</option>`).join("")}
+        </select>
+      </div>
+      <div><label>Niveau de relation</label><input id="c_rel" value="${c.relationLevel||""}"></div>
+      <div><label>Convention signée ?</label>
+        <select id="c_conv"><option value="true" ${c.conventionSigned?'selected':''}>Oui</option><option value="false" ${!c.conventionSigned?'selected':''}>Non</option></select>
+      </div>
+      <div><label>Capacité d’accueil</label><input id="c_cap" type="number" value="${c.capacity||0}"></div>
+      <div><label>Dernier contact</label><input id="c_last" type="date" value="${c.lastContactDate||today()}"></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveEditCompany('${c.id}')">Enregistrer</button>`);
+}
+function saveEditCompany(id){
+  const c = companyById(id); if(!c) return;
+  c.name = byId('c_name').value.trim();
+  c.sector = byId('c_sector').value.trim();
+  c.size = byId('c_size').value.trim();
+  c.address = byId('c_addr').value.trim();
+  c.website = byId('c_site').value.trim();
+  c.status = byId('c_status').value;
+  c.relationLevel = byId('c_rel').value.trim();
+  c.conventionSigned = byId('c_conv').value==="true";
+  c.capacity = parseInt(byId('c_cap').value||"0",10);
+  c.lastContactDate = byId('c_last').value;
+  saveDB(); closeModal(); route();
+}
+function deleteCompany(id){
+  if(!confirm("Supprimer cette entreprise ?")) return;
+  // remove linked offers/deals/placements
+  db.offers = db.offers.filter(o=>o.companyId!==id);
+  db.deals = db.deals.filter(d=>d.companyId!==id);
+  db.placements = db.placements.filter(p=>p.companyId!==id);
+  db.companies = db.companies.filter(c=>c.id!==id);
+  saveDB(); route();
+}
+function viewCompany(id){
+  const c = companyById(id); if(!c) return;
+  const deals = db.deals.filter(d=>d.companyId===id);
+  const offers = db.offers.filter(o=>o.companyId===id);
+  const placements = db.placements.filter(p=>p.companyId===id);
+  openModal("Entreprise — "+c.name, `
+    <div class="two">
+      <div>
+        <div class="muted">${c.sector||""} · ${c.size||""}</div>
+        <div class="muted">${c.address||""}</div>
+        <div style="margin-top:6px">${c.status?tag(c.status.includes("actif")?"ok":"warn", c.status):""} ${c.relationLevel?`· <span class="muted">${c.relationLevel}</span>`:""}</div>
+        <div style="margin-top:6px">Capacité: <strong>${c.capacity||0}</strong> · Placés: <strong>${c.placedStudents||0}</strong></div>
+        <div style="margin-top:6px">Convention: ${c.conventionSigned?tag("ok","Signée"):tag("warn","À signer")}</div>
+        <div class="row-actions" style="margin-top:10px">
+          <button class="btn" onclick="openAddOffer('${c.id}')">+ Offre</button>
+          <button class="btn" onclick="openAddDeal('${c.id}')">+ Opportunité</button>
+          <button class="btn" onclick="openAddInteraction('${c.id}')">+ Interaction</button>
+        </div>
+      </div>
+      <div>
+        <label>Site</label>${c.website?`<a class="muted-link" href="${c.website}" target="_blank">${c.website}</a>`:"—"}
+        <label style="margin-top:10px">Dernier contact</label><div class="pill">${c.lastContactDate||"—"}</div>
+        <label style="margin-top:10px">Notes</label><div class="pill">${c.notes||"—"}</div>
+      </div>
+    </div>
+    <h2>Opportunités commerciales</h2>
+    ${deals.length? deals.map(d=>dealCard(d)).join("") : `<div class="empty">Aucune opportunité</div>`}
+    <h2>Offres</h2>
+    ${offers.length? offers.map(o=>offerCard(o)).join("") : `<div class="empty">Aucune offre</div>`}
+    <h2>Placements</h2>
+    ${placements.length? placements.map(p=>placementLine(p)).join("") : `<div class="empty">Aucun placement</div>`}
+  `, ``);
+}
+
+/* ---------------------------
+   OFFERS & PLACEMENTS
+---------------------------- */
+function renderOffersPlacements(root){
+  root.innerHTML = `
+    <div class="toolbar">
+      <div class="filters">
+        <select id="tabOP" onchange="renderOffersPlacements(byId('app'))">
+          <option value="offers">Offres</option>
+          <option value="placements">Placements</option>
+        </select>
+      </div>
+      <div id="opActions"></div>
+    </div>
+    <div class="card" id="opContent"></div>
+  `;
+  const tab = byId('tabOP').value;
+  const actions = byId('opActions');
+  const cont = byId('opContent');
+  if(tab==="offers"){
+    actions.innerHTML = `<button class="btn primary" onclick="openAddOffer()">+ Nouvelle offre</button>`;
+    cont.innerHTML = `
+      <table>
+        <thead><tr><th>Intitulé</th><th>Entreprise</th><th>Type</th><th>Début</th><th>Places</th><th>Statut</th><th></th></tr></thead>
+        <tbody id="offersRows"></tbody>
+      </table>`;
+    const rows = db.offers.map(o=>{
+      const c = companyById(o.companyId);
+      return `<tr>
+        <td>${o.title}<div class="muted">${o.domain||""}</div></td>
+        <td>${c?c.name:"—"}</td>
+        <td>${o.type||""}</td>
+        <td>${o.startDate||"—"}</td>
+        <td>${o.spots||0}</td>
+        <td>${o.status||""}</td>
+        <td class="row-actions">
+          <button class="btn" onclick="matchStudents('${o.id}')">Matcher</button>
+          <button class="btn" onclick="openEditOffer('${o.id}')">Éditer</button>
+          <button class="btn" onclick="deleteOffer('${o.id}')">Suppr.</button>
+        </td>
+      </tr>`
+    }).join("");
+    byId('offersRows').innerHTML = rows || `<tr><td colspan="7" class="empty">Aucune offre</td></tr>`;
+  }else{
+    actions.innerHTML = `<button class="btn primary" onclick="openAddPlacement()">+ Nouveau placement</button>`;
+    cont.innerHTML = `
+      <table>
+        <thead><tr><th>Étudiant</th><th>Entreprise</th><th>Poste</th><th>Type</th><th>Dates</th><th></th></tr></thead>
+        <tbody id="plRows"></tbody>
+      </table>`;
+    const rows = db.placements.map(p=>{
+      const s = studentById(p.studentId), c = companyById(p.companyId);
+      return `<tr>
+        <td>${s?s.name:"—"}</td>
+        <td>${c?c.name:"—"}</td>
+        <td>${p.position||""}</td>
+        <td>${p.contractType||""}</td>
+        <td>${p.startDate||""} → ${p.endDate||""}</td>
+        <td class="row-actions">
+          <button class="btn" onclick="deletePlacement('${p.id}')">Suppr.</button>
+        </td>
+      </tr>`
+    }).join("");
+    byId('plRows').innerHTML = rows || `<tr><td colspan="6" class="empty">Aucun placement</td></tr>`;
+  }
+}
+function openAddOffer(companyId){
+  const compOpts = db.companies.map(c=>`<option value="${c.id}" ${companyId===c.id?'selected':''}>${c.name}</option>`).join("");
+  openModal("Ajouter une offre", `
+    <div class="two">
+      <div><label>Entreprise</label><select id="o_company">${compOpts}</select></div>
+      <div><label>Intitulé</label><input id="o_title" placeholder="Ex: Assistant Marketing"></div>
+      <div><label>Type</label><select id="o_type"><option>Alternance</option><option>Stage</option><option>CDI</option><option>CDD</option></select></div>
+      <div><label>Domaine</label><input id="o_domain" placeholder="Marketing / Data / Sales…"></div>
+      <div><label>Durée</label><input id="o_duration" placeholder="12 mois"></div>
+      <div><label>Places</label><input id="o_spots" type="number" min="1" value="1"></div>
+      <div><label>Début</label><input id="o_start" type="date" value="${today()}"></div>
+      <div><label>Statut</label><select id="o_status"><option>Ouverte</option><option>Fermée</option></select></div>
+      <div><label>Notes</label><textarea id="o_notes"></textarea></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveOffer()">Enregistrer</button>`);
+}
+function saveOffer(){
+  const o = {
+    id: uid(),
+    companyId: byId('o_company').value,
+    title: byId('o_title').value.trim(),
+    type: byId('o_type').value,
+    domain: byId('o_domain').value.trim(),
+    duration: byId('o_duration').value.trim(),
+    spots: parseInt(byId('o_spots').value||"1",10),
+    startDate: byId('o_start').value,
+    status: byId('o_status').value,
+    notes: byId('o_notes').value.trim()
+  };
+  if(!o.companyId || !o.title){ alert("Entreprise et intitulé requis"); return; }
+  db.offers.push(o);
+  const c = companyById(o.companyId); if(c) c.offers.push(o.id);
+  saveDB(); closeModal(); route();
+}
+function openEditOffer(id){
+  const o = offerById(id); if(!o) return;
+  const compOpts = db.companies.map(c=>`<option value="${c.id}" ${o.companyId===c.id?'selected':''}>${c.name}</option>`).join("");
+  openModal("Éditer l’offre", `
+    <div class="two">
+      <div><label>Entreprise</label><select id="o_company">${compOpts}</select></div>
+      <div><label>Intitulé</label><input id="o_title" value="${o.title}"></div>
+      <div><label>Type</label><select id="o_type">${["Alternance","Stage","CDI","CDD"].map(x=>`<option ${o.type===x?'selected':''}>${x}</option>`)}</select></div>
+      <div><label>Domaine</label><input id="o_domain" value="${o.domain||""}"></div>
+      <div><label>Durée</label><input id="o_duration" value="${o.duration||""}"></div>
+      <div><label>Places</label><input id="o_spots" type="number" value="${o.spots||1}"></div>
+      <div><label>Début</label><input id="o_start" type="date" value="${o.startDate||today()}"></div>
+      <div><label>Statut</label><select id="o_status">${["Ouverte","Fermée"].map(x=>`<option ${o.status===x?'selected':''}>${x}</option>`)}</select></div>
+      <div><label>Notes</label><textarea id="o_notes">${o.notes||""}</textarea></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveEditOffer('${o.id}')">Enregistrer</button>`);
+}
+function saveEditOffer(id){
+  const o = offerById(id); if(!o) return;
+  o.companyId = byId('o_company').value;
+  o.title = byId('o_title').value.trim();
+  o.type = byId('o_type').value;
+  o.domain = byId('o_domain').value.trim();
+  o.duration = byId('o_duration').value.trim();
+  o.spots = parseInt(byId('o_spots').value||"1",10);
+  o.startDate = byId('o_start').value;
+  o.status = byId('o_status').value;
+  o.notes = byId('o_notes').value.trim();
+  saveDB(); closeModal(); route();
+}
+function deleteOffer(id){
+  if(!confirm("Supprimer cette offre ?")) return;
+  const o = offerById(id);
+  if(o){ const c = companyById(o.companyId); if(c) c.offers = c.offers.filter(x=>x!==id); }
+  db.offers = db.offers.filter(x=>x.id!==id);
+  saveDB(); route();
+}
+function matchStudents(offerId){
+  const o = offerById(offerId); if(!o) return;
+  const candidates = db.students.filter(s => s.coaching.cv.progress>=70 && s.coaching.linkedin.progress>=60);
+  openModal("Matcher — " + o.title, `
+    <div class="muted">Candidats proposés (filtre CV ≥70% & LinkedIn ≥60%)</div>
+    <table style="margin-top:10px">
+      <thead><tr><th>Étudiant</th><th>Employabilité</th><th></th></tr></thead>
+      <tbody>
+        ${candidates.map(s=>{
+          const mean = percent((s.coaching.cv.progress + s.coaching.linkedin.progress + s.coaching.interview.progress)/3);
+          return `<tr>
+            <td>${s.name}</td>
+            <td style="min-width:160px"><div class="progress"><span style="width:${mean}%"></span></div></td>
+            <td><button class="btn" onclick="createPlacementFromOffer('${s.id}','${o.id}')">Créer un placement</button></td>
+          </tr>`
+        }).join("")}
+      </tbody>
+    </table>
+  `, ``);
+}
+function createPlacementFromOffer(studentId, offerId){
+  const o = offerById(offerId); if(!o) return;
+  const s = studentById(studentId); if(!s) return;
+  const c = companyById(o.companyId); if(!c) return;
+  const p = {
+    id: uid(), studentId, companyId: o.companyId,
+    position: o.title, contractType: o.type, startDate: o.startDate, endDate: ""
+  };
+  db.placements.push(p);
+  c.placements.push(p.id); c.placedStudents = (c.placedStudents||0)+1;
+  saveDB();
+  alert("Placement créé pour " + s.name + " chez " + c.name);
+  closeModal();
+}
+function openAddPlacement(){
+  const stuOpts = db.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+  const compOpts = db.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  openModal("Nouveau placement", `
+    <div class="two">
+      <div><label>Étudiant</label><select id="pl_stu">${stuOpts}</select></div>
+      <div><label>Entreprise</label><select id="pl_company">${compOpts}</select></div>
+      <div><label>Poste</label><input id="pl_position"></div>
+      <div><label>Type</label><select id="pl_type"><option>Alternance</option><option>Stage</option><option>CDI</option><option>CDD</option></select></div>
+      <div><label>Début</label><input id="pl_start" type="date" value="${today()}"></div>
+      <div><label>Fin</label><input id="pl_end" type="date"></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveManualPlacement()">Créer</button>`);
+}
+function saveManualPlacement(){
+  const p = {
+    id: uid(),
+    studentId: byId('pl_stu').value,
+    companyId: byId('pl_company').value,
+    position: byId('pl_position').value,
+    contractType: byId('pl_type').value,
+    startDate: byId('pl_start').value,
+    endDate: byId('pl_end').value
+  };
+  if(!p.studentId || !p.companyId || !p.position){ alert("Champs requis manquants"); return; }
+  db.placements.push(p);
+  const c = companyById(p.companyId); if(c){ c.placements.push(p.id); c.placedStudents = (c.placedStudents||0)+1; }
+  saveDB(); closeModal(); route();
+}
+function deletePlacement(id){
+  if(!confirm("Supprimer ce placement ?")) return;
+  const p = placementById(id);
+  if(p){
+    const c = companyById(p.companyId); if(c){ c.placements = c.placements.filter(x=>x!==id); c.placedStudents = Math.max(0,(c.placedStudents||0)-1); }
+  }
+  db.placements = db.placements.filter(x=>x.id!==id);
+  saveDB(); route();
+}
+
+/* ---------------------------
+   PIPELINE (DEALS)
+---------------------------- */
+const PIPE_STEPS = ["Nouveau","Contacté","Qualifié","Proposition","Négociation","Gagné","Perdu"];
+function renderPipeline(root){
+  root.innerHTML = `
+    <div class="toolbar">
+      <div class="filters">
+        <button class="btn" onclick="openAddDeal()">+ Nouvelle opportunité</button>
+      </div>
+      <div class="muted">Valeur totale: <strong>${euro(sum(db.deals,d=>d.dealValue||0))}</strong> · Pondérée: <strong>${euro(Math.round(sum(db.deals,d=>(d.dealValue||0)*((d.probability||0)/100))) )}</strong></div>
+    </div>
+    <div class="kanban" id="kanban"></div>
+  `;
+  const board = byId('kanban');
+  board.innerHTML = PIPE_STEPS.map(step=>{
+    const deals = db.deals.filter(d=>d.status===step);
+    const total = sum(deals, d=>d.dealValue||0);
+    return `<div class="col">
+      <h3>${step} · ${euro(total)}</h3>
+      ${deals.length? deals.map(d=>dealCard(d)).join("") : `<div class="empty">Aucune carte</div>`}
+    </div>`;
+  }).join("");
+}
+function dealCard(d){
+  const c = companyById(d.companyId);
+  return `<div class="deal">
+    <div class="top"><div>${c?c.name:"—"}</div><div>${statusTag(d.status)}</div></div>
+    <div class="meta">
+      <div>Valeur: <strong>${euro(d.dealValue||0)}</strong></div>
+      <div>Proba: <strong>${d.probability||0}%</strong></div>
+      <div>Close: ${d.expectedCloseDate||"—"}</div>
+    </div>
+    <div class="row-actions" style="margin-top:8px">
+      <button class="btn" onclick="openEditDeal('${d.id}')">Éditer</button>
+      <button class="btn" onclick="deleteDeal('${d.id}')">Suppr.</button>
+    </div>
+  </div>`;
+}
+function openAddDeal(companyId){
+  const compOpts = db.companies.map(c=>`<option value="${c.id}" ${companyId===c.id?'selected':''}>${c.name}</option>`).join("");
+  openModal("Nouvelle opportunité", `
+    <div class="two">
+      <div><label>Entreprise</label><select id="d_company">${compOpts}</select></div>
+      <div><label>Contact principal</label><input id="d_contact" placeholder="Nom"></div>
+      <div><label>Poste</label><input id="d_position" placeholder="DRH, CEO…"></div>
+      <div><label>Email</label><input id="d_email"></div>
+      <div><label>Téléphone</label><input id="d_phone"></div>
+      <div><label>Source</label><input id="d_source" placeholder="LinkedIn / salon…"></div>
+      <div><label>Statut</label><select id="d_status">${PIPE_STEPS.map(s=>`<option>${s}</option>`)}</select></div>
+      <div><label>Priorité</label><select id="d_priority"><option>Haute</option><option>Moyenne</option><option>Basse</option></select></div>
+      <div><label>Valeur (€)</label><input id="d_value" type="number" value="0"></div>
+      <div><label>Probabilité (%)</label><input id="d_prob" type="number" value="20" min="0" max="100"></div>
+      <div><label>Closing prévu</label><input id="d_close" type="date" value="${addDays(30)}"></div>
+      <div><label>Notes</label><textarea id="d_notes"></textarea></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveDeal()">Créer</button>`);
+}
+function saveDeal(){
+  const d = {
+    id: uid(),
+    companyId: byId('d_company').value || null,
+    contactName: byId('d_contact').value.trim(),
+    contactPosition: byId('d_position').value.trim(),
+    email: byId('d_email').value.trim(),
+    phone: byId('d_phone').value.trim(),
+    mobile: "",
+    source: byId('d_source').value.trim(),
+    status: byId('d_status').value,
+    priority: byId('d_priority').value,
+    dealValue: parseFloat(byId('d_value').value||"0"),
+    probability: parseInt(byId('d_prob').value||"0",10),
+    expectedCloseDate: byId('d_close').value,
+    notes: byId('d_notes').value.trim(),
+    lastContactDate: today(),
+    interactions: [], tasks: []
+  };
+  db.deals.push(d);
+  if(d.companyId){ const c = companyById(d.companyId); if(c) c.deals.push(d.id); }
+  saveDB(); closeModal(); route();
+}
+function openEditDeal(id){
+  const d = dealById(id); if(!d) return;
+  const compOpts = db.companies.map(c=>`<option value="${c.id}" ${d.companyId===c.id?'selected':''}>${c.name}</option>`).join("");
+  openModal("Éditer l’opportunité", `
+    <div class="two">
+      <div><label>Entreprise</label><select id="d_company">${compOpts}</select></div>
+      <div><label>Contact principal</label><input id="d_contact" value="${d.contactName||""}"></div>
+      <div><label>Poste</label><input id="d_position" value="${d.contactPosition||""}"></div>
+      <div><label>Email</label><input id="d_email" value="${d.email||""}"></div>
+      <div><label>Téléphone</label><input id="d_phone" value="${d.phone||""}"></div>
+      <div><label>Source</label><input id="d_source" value="${d.source||""}"></div>
+      <div><label>Statut</label><select id="d_status">${PIPE_STEPS.map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`)}</select></div>
+      <div><label>Priorité</label><select id="d_priority">${["Haute","Moyenne","Basse"].map(x=>`<option ${d.priority===x?'selected':''}>${x}</option>`)}</select></div>
+      <div><label>Valeur (€)</label><input id="d_value" type="number" value="${d.dealValue||0}"></div>
+      <div><label>Probabilité (%)</label><input id="d_prob" type="number" value="${d.probability||0}"></div>
+      <div><label>Closing prévu</label><input id="d_close" type="date" value="${d.expectedCloseDate||today()}"></div>
+      <div><label>Notes</label><textarea id="d_notes">${d.notes||""}</textarea></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveEditDeal('${d.id}')">Enregistrer</button>`);
+}
+function saveEditDeal(id){
+  const d = dealById(id); if(!d) return;
+  d.companyId = byId('d_company').value || null;
+  d.contactName = byId('d_contact').value.trim();
+  d.contactPosition = byId('d_position').value.trim();
+  d.email = byId('d_email').value.trim();
+  d.phone = byId('d_phone').value.trim();
+  d.source = byId('d_source').value.trim();
+  d.status = byId('d_status').value;
+  d.priority = byId('d_priority').value;
+  d.dealValue = parseFloat(byId('d_value').value||"0");
+  d.probability = parseInt(byId('d_prob').value||"0",10);
+  d.expectedCloseDate = byId('d_close').value;
+  d.notes = byId('d_notes').value.trim();
+  saveDB(); closeModal(); route();
+}
+function deleteDeal(id){
+  if(!confirm("Supprimer cette opportunité ?")) return;
+  const d = dealById(id);
+  if(d && d.companyId){
+    const c = companyById(d.companyId);
+    if(c){ c.deals = c.deals.filter(x=>x!==id); }
+  }
+  db.deals = db.deals.filter(x=>x.id!==id);
+  saveDB(); route();
+}
+
+/* ---------------------------
+   TASKS
+---------------------------- */
+function renderTasks(root){
+  root.innerHTML = `
+    <div class="toolbar">
+      <div class="filters">
+        <select id="t_filter" onchange="renderTasks(byId('app'))">
+          <option value="all">Toutes</option>
+          <option value="open">Ouvertes</option>
+          <option value="done">Terminées</option>
+        </select>
+      </div>
+      <div><button class="btn primary" onclick="openAddTask()">+ Nouvelle tâche</button></div>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Tâche</th><th>Échéance</th><th>Lien</th><th>Priorité</th><th>Statut</th><th></th></tr></thead>
+        <tbody id="tRows"></tbody>
+      </table>
+    </div>
+  `;
+  const filter = byId('t_filter').value;
+  const rows = db.tasks.filter(t=>{
+    if(filter==="open") return !t.completed;
+    if(filter==="done") return t.completed;
+    return true;
+  }).map(t=>{
+    let link = "—";
+    if(t.companyId){ const c = companyById(t.companyId); link = c?`Entreprise: ${c.name}`:"Entreprise: —"; }
+    if(t.dealId){ const d = dealById(t.dealId); const c = d?companyById(d.companyId):null; link = d?`Opportunité: ${c?c.name:""} (${d.status})`:""; }
+    if(t.studentId){ const s = studentById(t.studentId); link = s?`Étudiant: ${s.name}`:""; }
+    return `<tr>
+      <td>${t.title}</td>
+      <td class="muted">${t.dueDate||"—"}</td>
+      <td class="muted">${link}</td>
+      <td>${t.priority||"—"}</td>
+      <td>${t.completed?tag("ok","Terminé"):tag("warn","Ouvert")}</td>
+      <td class="row-actions">
+        <button class="btn" onclick="toggleTask('${t.id}')">${t.completed?"Rouvrir":"Terminer"}</button>
+        <button class="btn" onclick="deleteTask('${t.id}')">Suppr.</button>
+      </td>
+    </tr>`
+  }).join("");
+  byId('tRows').innerHTML = rows || `<tr><td colspan="6" class="empty">Aucune tâche</td></tr>`;
+}
+function openAddTask(){
+  const compOpts = `<option value="">—</option>` + db.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  const stuOpts = `<option value="">—</option>` + db.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+  const dealOpts = `<option value="">—</option>` + db.deals.map(d=>{
+    const name = companyById(d.companyId)?.name || "—";
+    return `<option value="${d.id}">${name} · ${d.status}</option>`;
+  }).join("");
+  openModal("Nouvelle tâche", `
+    <label>Titre</label><input id="t_title" placeholder="Ex: Relancer RH…">
+    <div class="three">
+      <div><label>Échéance</label><input id="t_due" type="date" value="${addDays(7)}"></div>
+      <div><label>Priorité</label><select id="t_priority"><option>Haute</option><option>Moyenne</option><option>Basse</option></select></div>
+      <div><label>Assigné à</label><input id="t_assign" value="Vous"></div>
+    </div>
+    <h2>Associer</h2>
+    <div class="three">
+      <div><label>Entreprise</label><select id="t_company">${compOpts}</select></div>
+      <div><label>Opportunité</label><select id="t_deal">${dealOpts}</select></div>
+      <div><label>Étudiant</label><select id="t_student">${stuOpts}</select></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveTask()">Créer</button>`);
+}
+function saveTask(ctx={}){
+  const t = {
+    id: uid(),
+    title: byId('t_title').value || ctx.title || "",
+    dueDate: byId('t_due')?byId('t_due').value:(ctx.dueDate||""),
+    completed:false,
+    assignedTo: byId('t_assign')?byId('t_assign').value:"Vous",
+    priority: byId('t_priority')?byId('t_priority').value:(ctx.priority||"Moyenne"),
+    companyId: byId('t_company')? (byId('t_company').value||null) : (ctx.companyId||null),
+    dealId: byId('t_deal')? (byId('t_deal').value||null) : (ctx.dealId||null),
+    studentId: byId('t_student')? (byId('t_student').value||null) : (ctx.studentId||null),
+  };
+  if(!t.title){ alert("Titre requis"); return; }
+  db.tasks.push(t); saveDB(); closeModal(); route();
+}
+function toggleTask(id){
+  const t = db.tasks.find(x=>x.id===id); if(!t) return;
+  t.completed = !t.completed; saveDB(); route();
+}
+function deleteTask(id){
+  if(!confirm("Supprimer cette tâche ?")) return;
+  db.tasks = db.tasks.filter(t=>t.id!==id); saveDB(); route();
+}
+
+/* ---------------------------
+   HISTORY (INTERACTIONS)
+---------------------------- */
+function renderHistory(root){
+  // pour simplifier, on liste les interactions + dernières MAJ de coaching comme événements synthétiques
+  const items = [];
+  // Interactions explicites
+  for(const it of db.interactions){
+    items.push({date: it.date, type: it.type, content: it.content, companyId: it.companyId, dealId: it.dealId, studentId: it.studentId});
+  }
+  // Synthèse coaching
+  for(const s of db.students){
+    if(s.coaching?.lastUpdate){
+      items.push({date: s.coaching.lastUpdate, type:"MAJ Coaching", content:`MAJ progrès pour ${s.name}`, studentId: s.id});
+    }
+  }
+  items.sort((a,b)=> (a.date||"").localeCompare(b.date||"")).reverse();
+  root.innerHTML = `
+    <div class="card">
+      ${items.length? items.map(x=>historyLine(x)).join("") : `<div class="empty">Aucun événement</div>`}
+    </div>
+  `;
+}
+function historyLine(x){
+  let link = "";
+  if(x.companyId){ const c = companyById(x.companyId); link += ` · Entreprise: ${c?c.name:"—"}`; }
+  if(x.dealId){ const d = dealById(x.dealId); const c = d?companyById(d.companyId):null; link += ` · Opportunité: ${c?c.name:"—"}`; }
+  if(x.studentId){ const s = studentById(x.studentId); link += ` · Étudiant: ${s?s.name:"—"}`; }
+  return `<div style="padding:10px 6px; border-bottom:1px dashed rgba(255,255,255,.07)">
+    <strong>${x.type||"Interaction"}</strong> <span class="muted">(${x.date||"—"})</span> — <span>${x.content||""}</span>
+    <span class="muted">${link}</span>
+  </div>`;
+}
+function openAddInteraction(companyId){
+  const compOpts = `<option value="">—</option>` + db.companies.map(c=>`<option value="${c.id}" ${companyId===c.id?'selected':''}>${c.name}</option>`).join("");
+  const stuOpts = `<option value="">—</option>` + db.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+  const dealOpts = `<option value="">—</option>` + db.deals.map(d=>{
+    const name = companyById(d.companyId)?.name || "—";
+    return `<option value="${d.id}">${name} · ${d.status}</option>`;
+  }).join("");
+  openModal("Nouvelle interaction", `
+    <div class="two">
+      <div><label>Date</label><input id="i_date" type="date" value="${today()}"></div>
+      <div><label>Type</label><select id="i_type"><option>Appel</option><option>Email</option><option>Rendez-vous</option><option>Visite</option><option>Événement</option><option>Note interne</option></select></div>
+      <div><label>Entreprise</label><select id="i_company">${compOpts}</select></div>
+      <div><label>Opportunité</label><select id="i_deal">${dealOpts}</select></div>
+      <div><label>Étudiant</label><select id="i_student">${stuOpts}</select></div>
+      <div style="grid-column:1/-1"><label>Contenu</label><textarea id="i_content" placeholder="Compte-rendu…"></textarea></div>
+    </div>
+  `, `<button class="btn primary" onclick="saveInteraction()">Enregistrer</button>`);
+}
+function saveInteraction(){
+  const it = {
+    id: uid(),
+    date: byId('i_date').value,
+    type: byId('i_type').value,
+    companyId: byId('i_company').value || null,
+    dealId: byId('i_deal').value || null,
+    studentId: byId('i_student').value || null,
+    content: byId('i_content').value || ""
+  };
+  db.interactions.push(it); saveDB(); closeModal(); route();
+}
+
+/* ---------------------------
+   HELPERS — UI
+---------------------------- */
+function offerCard(o){
+  const c = companyById(o.companyId);
+  return `<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <div><strong>${o.title}</strong> <span class="muted">· ${o.type} · ${o.domain||""}</span></div>
+      <div>${o.status==="Ouverte"?tag("ok","Ouverte"):tag("warn","Fermée")}</div>
+    </div>
+    <div class="muted" style="margin-top:6px">${c?c.name:"—"} — Début ${o.startDate||"—"} · ${o.spots||0} place(s)</div>
+    <div class="row-actions" style="margin-top:8px">
+      <button class="btn" onclick="matchStudents('${o.id}')">Matcher</button>
+      <button class="btn" onclick="openEditOffer('${o.id}')">Éditer</button>
+      <button class="btn" onclick="deleteOffer('${o.id}')">Suppr.</button>
+    </div>
+  </div>`;
+}
+function placementLine(p){
+  const s = studentById(p.studentId);
+  const c = companyById(p.companyId);
+  return `<div class="card">
+    <strong>${s?s.name:"—"}</strong> → <strong>${c?c.name:"—"}</strong> — ${p.position||""} (${p.contractType||""})<br>
+    <span class="muted">${p.startDate||""} → ${p.endDate||""}</span>
+  </div>`;
+}
+function openModal(title, bodyHTML, footHTML){
+  byId('modalTitle').innerText = title || "";
+  byId('modalBody').innerHTML = bodyHTML || "";
+  byId('modalFoot').innerHTML = footHTML || "";
+  const m = byId('modal'); m.style.display='flex'; m.setAttribute('aria-hidden','false');
+}
+function closeModal(){
+  const m = byId('modal'); m.style.display='none'; m.setAttribute('aria-hidden','true');
+  byId('modalTitle').innerText=""; byId('modalBody').innerHTML=""; byId('modalFoot').innerHTML="";
+}
+
+/* ---------------------------
+   EXPORT / IMPORT / RESET
+---------------------------- */
+byId('exportBtn').addEventListener('click', ()=>{
+  const data = JSON.stringify(db, null, 2);
+  const blob = new Blob([data], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download = 'crm-suivi-export.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+byId('importInput').addEventListener('change', (e)=>{
+  const file = e.target.files?.[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!data || typeof data!=="object") throw new Error("Fichier invalide");
+      db = data; saveDB(); route();
+      alert("Import terminé.");
+    }catch(err){
+      alert("Erreur d’import: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+byId('resetBtn').addEventListener('click', ()=>{
+  if(!confirm("Réinitialiser toutes les données ?")) return;
+  db = defaultDB();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  route();
+});
+
+/* ---------------------------
+   INIT
+---------------------------- */
+function renderStudentsWrapper(){ renderStudents(document.getElementById('app')); } // helper si besoin
+renderNav();
+route();
+</script>
+</body>
+</html>
