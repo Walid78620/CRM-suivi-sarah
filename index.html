@@ -389,7 +389,10 @@ async function saveNewStudent(){
   };
   if(!payload.name){ alert("Nom requis"); return; }
   const created = await API.post('students', payload);
-  if(created?.id){ db.students.push(created); saveDB(); }
+  if(created?.id){
+    if(!db.students.find(s=>s.id===created.id)) db.students.push(created);
+    saveDB();
+  }
   closeModal(); route();
 }
 function openEditStudent(id){
@@ -556,7 +559,10 @@ async function saveCompany(){
   };
   if(!payload.name){ alert("Nom requis"); return; }
   const created = await API.post('companies', payload);
-  if(created?.id){ db.companies.push(created); saveDB(); }
+  if(created?.id){
+    if(!db.companies.find(c=>c.id===created.id)) db.companies.push(created);
+    saveDB();
+  }
   closeModal(); route();
 }
 function openEditCompany(id){
@@ -705,7 +711,10 @@ async function saveOffer(){
   };
   if(!payload.companyId || !payload.title){ alert("Entreprise et intitulé requis"); return; }
   const created = await API.post('offers', payload);
-  if(created?.id){ db.offers.push(created); saveDB(); }
+  if(created?.id){
+    if(!db.offers.find(o=>o.id===created.id)) db.offers.push(created);
+    saveDB();
+  }
   closeModal(); route();
 }
 function openEditOffer(id){
@@ -880,7 +889,10 @@ async function saveDeal(){
     lastContactDate: today()
   };
   const created = await API.post('deals', payload);
-  if(created?.id){ db.deals.push(created); saveDB(); }
+  if(created?.id){
+    if(!db.deals.find(d=>d.id===created.id)) db.deals.push(created);
+    saveDB();
+  }
   closeModal(); route();
 }
 function openEditDeal(id){
@@ -1015,7 +1027,10 @@ async function saveTask(){
   };
   if(!payload.title){ alert("Titre requis"); return; }
   const created = await API.post('tasks', payload);
-  if(created?.id){ db.tasks.push(created); saveDB(); }
+  if(created?.id){
+    if(!db.tasks.find(t=>t.id===created.id)) db.tasks.push(created);
+    saveDB();
+  }
   closeModal(); route();
 }
 async function toggleTask(id){
@@ -1096,7 +1111,10 @@ async function saveInteraction(){
     content: byId('i_content').value || ""
   };
   const created = await API.post('interactions', payload);
-  if(created?.id){ db.interactions.push(created); saveDB(); }
+  if(created?.id){
+    if(!db.interactions.find(i=>i.id===created.id)) db.interactions.push(created);
+    saveDB();
+  }
   closeModal(); route();
 }
 
