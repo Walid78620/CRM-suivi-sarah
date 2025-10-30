@@ -105,83 +105,8 @@
 
   <footer>CRM & Suivi · Front Netlify + API serverless · v2</footer>
 
-  <!-- Client API (Netlify Functions) -->
-  <script>
-  // Robust API wrapper: checks HTTP status and content-type, handles HTML/404 fallback
-  const API = (function(){
-    // local simulator: performs CRUD on the `db` object and persists via saveDB()
-    function localSim(method, path, body){
-      try{
-        const collection = path.split('/')[0];
-        if(!(collection in db)) return null;
-        if(method === 'GET'){
-          // return a shallow copy so callers can mutate safely
-          return JSON.parse(JSON.stringify(db[collection] || []));
-        }
-        if(method === 'POST'){
-          const obj = Object.assign({ id: uid(), createdAt: new Date().toISOString(), _local:true }, (body||{}));
-          db[collection] = db[collection] || [];
-          db[collection].push(obj);
-          saveDB();
-          return obj;
-        }
-        if(method === 'PATCH'){
-          const id = (body && body.id) || null;
-          if(!id) return null;
-          const idx = (db[collection]||[]).findIndex(x=>x.id===id);
-          if(idx === -1) return null;
-          Object.assign(db[collection][idx], body);
-          saveDB();
-          return db[collection][idx];
-        }
-        if(method === 'DELETE'){
-          const id = (body && body.id) || null;
-          if(!id) return null;
-          db[collection] = (db[collection]||[]).filter(x=>x.id!==id);
-          saveDB();
-          return { id };
-        }
-        return null;
-      }catch(e){ console.warn('localSim error', e); return null; }
-    }
-
-    async function request(method, path, body){
-      const url = `/api/${path}`;
-      const opts = { method, headers: {'Content-Type':'application/json'} };
-      if(body) opts.body = JSON.stringify(body);
-      try{
-        const res = await fetch(url, opts);
-        const ct = (res.headers.get('content-type')||'').toLowerCase();
-        if(!res.ok){
-          if(ct.includes('application/json')){
-            const j = await res.json();
-            throw new Error(j?.message || `API ${res.status}`);
-          } else {
-            throw new Error(`API ${res.status} ${res.statusText}`);
-          }
-        }
-        if(ct.includes('application/json')) return await res.json();
-        return null;
-      }catch(err){
-        // On any fetch error, fallback to local simulator (so app keeps working offline)
-        if(!window.__api_simulator_logged){
-          console.warn(`${method} ${url} failed, using local simulator:`, err);
-          window.__api_simulator_logged = true;
-        }
-        // show a small badge in the UI to indicate offline/simulated mode
-        try{ showSimulatorBadge(); }catch(e){}
-        return localSim(method, path, body);
-      }
-    }
-
-    return {
-      get:  (path)       => request('GET', path),
-      post: (path, body) => request('POST', path, body),
-      patch:(path, body) => request('PATCH', path, body),
-      del:  (path, body) => request('DELETE', path, body)
-    };
-  })();
-  </script>
+  <!-- Client API (Netlify Functions) loaded as ES module -->
+  <script type="module" src="/src/bootstrap.js"></script>
 
 <script>
 /* =========================

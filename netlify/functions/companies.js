@@ -5,6 +5,16 @@ export async function handler(event) {
   if (event.httpMethod === 'OPTIONS') return preflight();
   try {
     if (event.httpMethod === 'GET') {
+      const q = (event.queryStringParameters && event.queryStringParameters.q) ? String(event.queryStringParameters.q).toLowerCase() : null;
+      const limit = event.queryStringParameters && event.queryStringParameters.limit ? parseInt(event.queryStringParameters.limit,10) : null;
+      if(q){
+        const { rows } = await pool.query(`select * from companies where lower(name) like '%' || $1 || '%' or lower(sector) like '%' || $1 || '%' or lower(address) like '%' || $1 || '%' order by created_at asc`, [q]);
+        return ok(rows);
+      }
+      if(limit){
+        const { rows } = await pool.query(`select * from companies order by created_at asc limit $1`, [limit]);
+        return ok(rows);
+      }
       const { rows } = await pool.query(`select * from companies order by created_at asc`);
       return ok(rows);
     }
