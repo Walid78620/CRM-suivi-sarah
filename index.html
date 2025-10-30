@@ -247,7 +247,7 @@ async function renderStudents(root){
   }
   root.innerHTML = `
     <div class="toolbar">
-      <div class="filters"><input id="stuSearch" placeholder="Rechercher (nom, email)..." oninput="renderStudents(byId('app'))"></div>
+      <div class="filters"><input id="stuSearch" placeholder="Rechercher (nom, email)..." oninput="updateStudentsRows()"></div>
       <div><button class="btn primary" onclick="openAddStudent()">+ Ajouter</button></div>
     </div>
     <div class="card">
@@ -257,6 +257,11 @@ async function renderStudents(root){
       </table>
     </div>
   `;
+  // populate rows after rendering toolbar
+  updateStudentsRows();
+}
+
+function updateStudentsRows(){
   const q=(byId('stuSearch')?.value||"").toLowerCase();
   const rows = db.students.filter(s=> !q || s.name?.toLowerCase().includes(q) || (s.email||"").toLowerCase().includes(q) ).map(s=>{
     const c=s.coaching||{cv:{progress:0},linkedin:{progress:0},interview:{progress:0}, lastUpdate:""};
@@ -399,8 +404,8 @@ async function renderCompanies(root){
   root.innerHTML = `
     <div class="toolbar">
       <div class="filters">
-        <input id="compSearch" placeholder="Rechercher (nom, secteur, ville…)" oninput="renderCompanies(byId('app'))">
-        <select id="compStatus" onchange="renderCompanies(byId('app'))">
+        <input id="compSearch" placeholder="Rechercher (nom, secteur, ville…)" oninput="updateCompaniesRows()">
+        <select id="compStatus" onchange="updateCompaniesRows()">
           <option value="">— Statut relation —</option>
           <option>Partenaire actif</option><option>Potentiel</option><option>Premier contact</option>
         </select>
@@ -414,6 +419,10 @@ async function renderCompanies(root){
       </table>
     </div>
   `;
+  updateCompaniesRows();
+}
+
+function updateCompaniesRows(){
   const q=(byId('compSearch')?.value||"").toLowerCase();
   const st=(byId('compStatus')?.value||"");
   const rows = db.companies.filter(c=>{
