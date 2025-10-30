@@ -334,12 +334,17 @@ async function saveNewStudent(){
     }
   };
   if(!payload.name){ alert("Nom requis"); return; }
-  const created = await API.post('students', payload);
-  if(created?.id){
-    if(!db.students.find(s=>s.id===created.id)) db.students.push(created);
-    saveDB();
+  try{
+    const created = await API.post('students', payload);
+    if(created?.id){
+      if(!db.students.find(s=>s.id===created.id)) db.students.push(created);
+      saveDB();
+    }
+    closeModal(); route();
+  }catch(err){
+    console.error('saveNewStudent error', err);
+    alert('Erreur lors de la création : ' + (err?.message || err));
   }
-  closeModal(); route();
 }
 function openEditStudent(id){
   const s = studentById(id); if(!s) return;

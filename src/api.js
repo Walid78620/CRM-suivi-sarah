@@ -7,11 +7,14 @@ async function request(method, path, body){
     const res = await fetch(url, opts);
     const ct = (res.headers.get('content-type')||'').toLowerCase();
     if(!res.ok){
+      // Try to extract a useful error message from JSON or text bodies
       if(ct.includes('application/json')){
         const j = await res.json();
-        throw new Error(j?.message || `API ${res.status}`);
+        const msg = j?.message || j?.error || j?.detail || j?.error_description || `API ${res.status}`;
+        throw new Error(msg);
       } else {
-        throw new Error(`API ${res.status} ${res.statusText}`);
+        const txt = await res.text().catch(()=>res.statusText||`API ${res.status}`);
+        throw new Error(txt || `API ${res.status} ${res.statusText}`);
       }
     }
     if(ct.includes('application/json')) return await res.json();
