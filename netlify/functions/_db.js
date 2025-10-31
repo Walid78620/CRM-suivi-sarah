@@ -70,6 +70,6 @@ export function buildUpdate(table, id, patch) {
   return { text: `update ${table} set ${sets} where id = $1 returning *`, values };
 }
 
-export { pool };
+export { pool, foundEnv };
 
 

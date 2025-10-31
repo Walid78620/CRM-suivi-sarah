@@ -1,7 +1,8 @@
-import { pool, cors } from './_db.js';
+import { pool, cors, foundEnv } from './_db.js';
 
 export async function handler(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: '' };
   const { rows } = await pool.query('select now() as now');
-  return { statusCode: 200, headers: cors, body: JSON.stringify(rows[0]) };
+  // Return the current time plus which env var name was detected (non-secret).
+  return { statusCode: 200, headers: cors, body: JSON.stringify({ now: rows[0], dbEnv: foundEnv || null }) };
 }
