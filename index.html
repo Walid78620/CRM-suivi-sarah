@@ -50,13 +50,21 @@
     .toolbar .filters{ display:flex; gap:8px; flex-wrap:wrap }
     input, select, textarea{ width:100%; padding:10px 12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); color:var(--text); border-radius:12px; outline:none;}
 
-  /* Ensure selects and their options are readable on dark backgrounds (modal) */
-  select{ color:var(--text); background:rgba(255,255,255,.03); }
-  select option{ color:var(--text); background:linear-gradient(180deg, rgba(11,18,32,1), rgba(11,18,32,1)); }
-  /* Improve contrast for focused/selectable controls inside modal */
-  .modal select, .modal input, .modal textarea{ background:rgba(255,255,255,0.03); color:var(--text); border-color:rgba(255,255,255,.12); }
-  /* On some platforms option background cannot be styled; add a fallback by styling the focused select */
-  select:focus{ box-shadow:0 0 0 3px rgba(90,169,255,.12); }
+    /* Ensure selects and their options are readable.
+       Many browsers restrict styling of native <option> popups, so we prefer
+       a high-contrast fallback: dark text on light background for select controls. */
+    select{
+      color: #081020; /* dark text for readability */
+      background: #ffffff; /* white background so dropdown list is readable */
+      border-radius: 10px;
+      padding: 8px 10px;
+      border-color: rgba(0,0,0,0.08);
+    }
+    /* Option styling may be ignored by some browsers, but keep it for those that apply it */
+    select option{ color: #081020; background: #ffffff; }
+    /* Specific modal inputs keep a subtle dark background but selects still use white for legibility */
+    .modal input, .modal textarea{ background:rgba(255,255,255,0.03); color:var(--text); border-color:rgba(255,255,255,.12); }
+    select:focus{ box-shadow:0 0 0 3px rgba(90,169,255,.12); }
     label{ display:block; font-size:12px; color:#c8d5f1; margin:10px 2px 6px }
     .two{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
     .three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px }
