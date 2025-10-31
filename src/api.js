@@ -17,7 +17,16 @@ async function request(method, path, body){
         throw new Error(txt || `API ${res.status} ${res.statusText}`);
       }
     }
+    // Be tolerant: if content-type says JSON, parse normally. If not, attempt to
+    // parse the text body as JSON when possible (some serverless deployments
+    // return text/plain even for JSON). This makes the client robust against
+    // incorrect Content-Type headers.
     if(ct.includes('application/json')) return await res.json();
+    const txt = await res.text();
+    const trimmed = (txt || '').trim();
+    if(trimmed.startsWith('{') || trimmed.startsWith('[')){
+      try{ return JSON.parse(trimmed); }catch(e){ /* fallthrough */ }
+    }
     return null;
   }catch(err){
     // Propagate the error to the caller. No local simulator fallback.

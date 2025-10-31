@@ -47,8 +47,11 @@ export const cors = {
   'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS'
 };
 
+// Ensure responses explicitly declare JSON content type so browsers/fetch can parse reliably
+export const defaultHeaders = Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, cors);
+
 export function ok(body, code = 200) {
-  return { statusCode: code, headers: cors, body: body !== undefined ? JSON.stringify(body) : '' };
+  return { statusCode: code, headers: defaultHeaders, body: body !== undefined ? JSON.stringify(body) : '' };
 }
 export function bad(msg, code = 400) { return ok({ error: String(msg) }, code); }
 export function error(e) { console.error(e); return ok({ error: e.message || 'Server error' }, 500); }
