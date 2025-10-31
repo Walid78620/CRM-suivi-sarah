@@ -1204,10 +1204,17 @@ byId('importInput').addEventListener('change', (e)=>{
 
 // Simple robust CSV parser (handles quoted fields and doubled quotes)
 function parseCSV(text){
+  // normalize line endings
   const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
   // drop empty trailing lines
   while(lines.length && lines[lines.length-1].trim()==='') lines.pop();
   if(!lines.length) return { headers:[], rows:[] };
+  // auto-detect delimiter: prefer comma or semicolon based on first line
+  const first = lines[0] || '';
+  const commaCount = (first.match(/,/g) || []).length;
+  const semiCount = (first.match(/;/g) || []).length;
+  const delim = semiCount > commaCount ? ';' : ',';
+
   function splitLine(line){
     const out = []; let cur = '', i=0, inQuotes=false;
     while(i<line.length){
@@ -1219,15 +1226,28 @@ function parseCSV(text){
         } else { cur += ch; i++; continue; }
       } else {
         if(ch==='"'){ inQuotes = true; i++; continue; }
-        if(ch===','){ out.push(cur); cur=''; i++; continue; }
+        if(ch===delim){ out.push(cur); cur=''; i++; continue; }
         cur += ch; i++; continue;
       }
     }
     out.push(cur);
     return out;
   }
-  const headers = splitLine(lines[0]).map(h=>h.trim());
-  const rows = lines.slice(1).map(l => splitLine(l).map(v=>v.trim()));
+
+  // parse and normalize headers: trim, remove surrounding quotes and BOM
+  const rawHeaders = splitLine(lines[0]).map(h=>h.trim());
+  const headers = rawHeaders.map(h=>{
+    let v = h.replace(/^\uFEFF/, ''); // BOM
+    if(v.startsWith('"') && v.endsWith('"')) v = v.slice(1,-1);
+    return v.trim();
+  });
+
+  const rows = lines.slice(1).map(l => splitLine(l).map(v=>{
+    let s = v.trim();
+    if(s.startsWith('"') && s.endsWith('"')) s = s.slice(1,-1).replace(/""/g,'"');
+    return s;
+  }));
+
   return { headers, rows };
 }
 
@@ -1245,8 +1265,13 @@ function openCSVMappingModal(headers, rows){
   // Build modal HTML
   const entityOptions = Object.keys(entities).map(k=>`<option value="${k}">${k}</option>`).join('');
   const mappingRows = (entity)=> entities[entity].map(f=>{
-    // try to auto-select a header by name similarity
-    const guessIndex = headers.findIndex(h => h.toLowerCase().replace(/\s+/g,'').includes(f.toLowerCase()));
+    // try to auto-select a header by normalized name similarity
+    const norm = s => String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const guessIndex = headers.findIndex(h => {
+      const nh = norm(h);
+      const nf = norm(f);
+      return nh === nf || nh.includes(nf) || nf.includes(nh);
+    });
     const selectOptions = ['<option value="">— Ignorer —</option>']
       .concat(headers.map((h,idx)=>`<option value="${idx}" ${idx===guessIndex?'selected':''}>${h}</option>`));
     return `<div style="margin-bottom:8px"><label style="font-size:12px;color:#c8d5f1">${f}</label><div>${selectOptions.join('')}</div></div>`;
