@@ -7,7 +7,7 @@ export async function handler(event) {
     if (event.httpMethod === 'GET') {
       const { rows } = await pool.query(`select i.*, c.name as company_name
         from interactions i
-        left join companies c on c.id = i."companyId"
+        left join companies c on c.id = i.companyid
         order by i.date desc nulls last, i.created_at desc`);
       return ok(rows);
     }
