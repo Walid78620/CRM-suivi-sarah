@@ -1,4 +1,4 @@
-import { pool, ok, bad, error, preflight, buildInsert, buildUpdate } from './_db.js';
+import { pool, ok, bad, error, preflight, buildInsert, buildUpdate } from '../_db.js';
 const TABLE = 'interactions';
 
 export async function handler(event) {
