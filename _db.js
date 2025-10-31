@@ -1,6 +1,8 @@
-import { Pool } from '@neondatabase/serverless';
+import { neon } from '@netlify/neon';
+const sql = neon(); 
+const [post] = await sql`SELECT * FROM posts WHERE id = ${postId}`;
 
-export const pool = new Pool({ connectionString: process.env.NEON_DATABASE_URL });
+export const sql = new neon({ connectionString: process.env.NETLIFY_DATABASE_URL });
 
 export const cors = {
   'Access-Control-Allow-Origin': '*',
