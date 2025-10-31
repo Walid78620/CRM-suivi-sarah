@@ -74,4 +74,17 @@ export function buildUpdate(table, id, patch) {
 
 export { pool, foundEnv };
 
+// NOTE: This file should not be deployed as a Netlify Function. It used to be a helper
+// placed inside `netlify/functions/` which makes Netlify try to load it as a function and
+// fail because it doesn't export a `handler`. To avoid runtime crashes during deploy we
+// export a defensive handler that returns a clear error message. The real helper lives in
+// `netlify/_db.js` and other functions should import from there.
+export async function handler(event){
+  return {
+    statusCode: 500,
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ error: 'This module is a DB helper and should not be invoked as a function. Move it to netlify/_db.js and import from ../_db.js.' })
+  };
+}
+
 
