@@ -89,7 +89,7 @@
       <div class="actions">
         <button class="btn ghost" id="exportBtn">Exporter</button>
         <label class="btn ghost" for="importInput">Importer</label>
-        <input id="importInput" type="file" accept="application/json" style="display:none" />
+        <input id="importInput" type="file" accept=".json,.csv,application/json,text/csv" style="display:none" />
         <button class="btn" id="resetBtn">Réinitialiser</button>
       </div>
     </div>
@@ -1154,13 +1154,199 @@ function openExportModal(){
 }
 byId('exportBtn').addEventListener('click', openExportModal);
 byId('importInput').addEventListener('change', (e)=>{
-  const file=e.target.files?.[0]; if(!file) return;
-  const reader=new FileReader(); reader.onload=ev=>{
-    try{ const data=JSON.parse(ev.target.result); if(!data||typeof data!=="object") throw new Error("Fichier invalide");
-      db=data; saveDB(); route(); alert("Import terminé.");
-    }catch(err){ alert("Erreur d’import: "+err.message); }
-  }; reader.readAsText(file);
+  const file = e.target.files?.[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const text = ev.target.result;
+    // JSON import (legacy)
+    if(file.type.includes('json') || file.name.toLowerCase().endsWith('.json')){
+      try{ const data = JSON.parse(text); if(!data||typeof data!=='object') throw new Error('Fichier JSON invalide'); db = data; saveDB(); route(); alert('Import JSON terminé.'); }
+      catch(err){
+        // If the uploaded file is actually a binary (eg. .xlsx which is a zip/PK archive), show a friendlier message
+        const isZip = /^\s*PK/.test(text);
+        const hasNull = text.indexOf('\u0000') !== -1;
+        if(isZip || hasNull){
+          alert("Fichier non-JSON détecté (probablement un fichier Excel .xlsx). Convertissez-le en CSV ou exportez en JSON avant d'importer.");
+        } else {
+          alert('Erreur d\'import JSON: ' + err.message);
+        }
+      }
+      return;
+    }
+    // CSV import
+    try{
+      // quick binary detection: many binary formats (xlsx, xls, pdf...) will contain NULs or PK signature
+      const isZip = /^\s*PK/.test(text);
+      const hasNull = text.indexOf('\u0000') !== -1;
+      if(isZip || hasNull){
+        alert("Fichier binaire détecté (probablement .xlsx). Veuillez convertir en CSV avant d'importer.");
+        return;
+      }
+      const parsed = parseCSV(text);
+      if(!parsed || !parsed.headers || !parsed.rows.length) { alert('CSV vide ou invalide'); return; }
+      openCSVMappingModal(parsed.headers, parsed.rows);
+    }catch(err){ console.error(err); alert('Erreur lors du parsing CSV: ' + (err && err.message)); }
+  };
+  reader.readAsText(file);
 });
+
+// Simple robust CSV parser (handles quoted fields and doubled quotes)
+function parseCSV(text){
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  // drop empty trailing lines
+  while(lines.length && lines[lines.length-1].trim()==='') lines.pop();
+  if(!lines.length) return { headers:[], rows:[] };
+  function splitLine(line){
+    const out = []; let cur = '', i=0, inQuotes=false;
+    while(i<line.length){
+      const ch = line[i];
+      if(inQuotes){
+        if(ch==='"'){
+          if(i+1<line.length && line[i+1]==='"'){ cur += '"'; i+=2; continue; }
+          inQuotes = false; i++; continue;
+        } else { cur += ch; i++; continue; }
+      } else {
+        if(ch==='"'){ inQuotes = true; i++; continue; }
+        if(ch===','){ out.push(cur); cur=''; i++; continue; }
+        cur += ch; i++; continue;
+      }
+    }
+    out.push(cur);
+    return out;
+  }
+  const headers = splitLine(lines[0]).map(h=>h.trim());
+  const rows = lines.slice(1).map(l => splitLine(l).map(v=>v.trim()));
+  return { headers, rows };
+}
+
+// Render mapping modal allowing user to choose entity and map CSV headers to entity fields
+function openCSVMappingModal(headers, rows){
+  const entities = {
+    students: ['name','email','phone','created_at'],
+    companies: ['name','sector','size','address','website','status','relationLevel','conventionSigned','capacity','lastContactDate'],
+    offers: ['companyId','title','type','domain','duration','spots','startDate','status','notes'],
+    deals: ['companyId','contactName','contactPosition','email','phone','source','status','priority','dealValue','probability','expectedCloseDate','notes'],
+    tasks: ['title','dueDate','completed','assignedTo','priority','companyId','dealId','studentId'],
+    interactions: ['date','type','companyId','dealId','studentId','content']
+  };
+
+  // Build modal HTML
+  const entityOptions = Object.keys(entities).map(k=>`<option value="${k}">${k}</option>`).join('');
+  const mappingRows = (entity)=> entities[entity].map(f=>{
+    // try to auto-select a header by name similarity
+    const guessIndex = headers.findIndex(h => h.toLowerCase().replace(/\s+/g,'').includes(f.toLowerCase()));
+    const selectOptions = ['<option value="">— Ignorer —</option>']
+      .concat(headers.map((h,idx)=>`<option value="${idx}" ${idx===guessIndex?'selected':''}>${h}</option>`));
+    return `<div style="margin-bottom:8px"><label style="font-size:12px;color:#c8d5f1">${f}</label><div>${selectOptions.join('')}</div></div>`;
+  }).join('');
+
+  const previewTable = buildPreviewTable(headers, rows.slice(0,5));
+  const body = `
+    <div class="two">
+      <div>
+        <label>Entité cible</label>
+        <select id="csv_entity">${entityOptions}</select>
+        <div style="margin-top:10px"><label>Associer colonnes CSV → champs</label><div id="csv_mapping">${mappingRows('students')}</div></div>
+        <div style="margin-top:8px"><label><input type="checkbox" id="csv_push_server" checked> Envoyer automatiquement au serveur (API)</label></div>
+        <div style="margin-top:8px"><button class="btn primary" id="csv_import_btn">Importer</button> <button class="btn" id="csv_preview_btn">Aperçu</button></div>
+      </div>
+      <div>
+        <label>Aperçu (5 premières lignes)</label>
+        <div id="csv_preview_area" style="max-height:320px;overflow:auto">${previewTable}</div>
+      </div>
+    </div>
+  `;
+
+  openModal('Importer CSV — mapping', body, `<button class="btn" onclick="closeModal()">Fermer</button>`);
+
+  const entityEl = byId('csv_entity'); const mappingEl = byId('csv_mapping'); const previewArea = byId('csv_preview_area');
+  // when entity changes, re-render mapping selects
+  entityEl.addEventListener('change', ()=>{
+    const e = entityEl.value; mappingEl.innerHTML = entities[e].map(f=>{
+      const guessIndex = headers.findIndex(h => h.toLowerCase().replace(/\s+/g,'').includes(f.toLowerCase()));
+      const selectOptions = ['<option value="">— Ignorer —</option>']
+        .concat(headers.map((h,idx)=>`<option value="${idx}" ${idx===guessIndex?'selected':''}>${h}</option>`));
+      return `<div style="margin-bottom:8px"><label style="font-size:12px;color:#c8d5f1">${f}</label><div>${selectOptions.join('')}</div></div>`;
+    }).join('');
+  });
+
+  byId('csv_preview_btn').addEventListener('click', ()=>{
+    // build a preview table according to current mapping
+    const mapping = collectMapping(headers);
+    previewArea.innerHTML = buildMappedPreview(mapping, headers, rows.slice(0,10));
+  });
+
+  byId('csv_import_btn').addEventListener('click', async ()=>{
+    const entity = entityEl.value;
+    const mapping = collectMapping(headers);
+    const push = !!byId('csv_push_server').checked;
+    try{
+      await applyCSVImport(entity, mapping, headers, rows, push);
+      closeModal();
+      alert('Import terminé. Rafraîchissement des données.');
+      // refresh remote data for that entity
+      try{ const remote = await API.get(entity); if(Array.isArray(remote)){ db[entity]=remote; saveDB(); } }catch(e){ console.warn('refresh after import failed', e); }
+      route();
+    }catch(err){ console.error(err); alert('Erreur lors de l\'import: ' + (err && err.message)); }
+  });
+}
+
+function collectMapping(headers){
+  // returns array where keys are CSV header indexes or null; order matches DOM mapping selects in mapping container
+  const selects = Array.from(byId('csv_mapping').querySelectorAll('select'));
+  // get labels for fields in order
+  const labels = Array.from(byId('csv_mapping').querySelectorAll('label')).map(l=>l.innerText);
+  const mapping = {};
+  selects.forEach((s,i)=>{ const v = s.value; mapping[labels[i]] = (v===''?null:parseInt(v,10)); });
+  return mapping;
+}
+
+function buildPreviewTable(headers, sampleRows){
+  const head = headers.map(h=>`<th>${h}</th>`).join('');
+  const body = sampleRows.map(r=>`<tr>${headers.map((_,i)=>`<td>${(r[i]||'')}</td>`).join('')}</tr>`).join('');
+  return `<table style="width:100%"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function buildMappedPreview(mapping, headers, sampleRows){
+  const cols = Object.keys(mapping);
+  const head = cols.map(c=>`<th>${c}</th>`).join('');
+  const body = sampleRows.map(r=>`<tr>${cols.map(c=>{ const idx = mapping[c]; return `<td>${ idx===null||idx===undefined?'': (r[idx]||'') }</td>` }).join('')}</tr>`).join('');
+  return `<table style="width:100%"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+async function applyCSVImport(entity, mapping, headers, rows, pushToServer){
+  // mapping: { fieldName: csvIndex|null }
+  const items = rows.map(r => {
+    const obj = {};
+    for(const [field, idx] of Object.entries(mapping)){
+      if(idx===null || idx===undefined) continue;
+      let val = r[idx]||'';
+      // basic coercions
+      if(field==='capacity' || field==='spots' || field==='dealValue' || field==='probability') val = val?Number(val):0;
+      if(field==='conventionSigned' || field==='completed') val = String(val).toLowerCase() === 'true' || val === '1' || String(val).toLowerCase()==='oui';
+      obj[field] = val;
+    }
+    return obj;
+  });
+
+  if(pushToServer){
+    // sequential to avoid DB overload; collect failures
+    const errors = [];
+    for(let i=0;i<items.length;i++){
+      const payload = items[i];
+      try{ await API.post(entity, payload); }catch(e){ errors.push({row:i, err:e.message||String(e)}); }
+    }
+    if(errors.length) throw new Error('Certaines lignes ont échoué: ' + JSON.stringify(errors.slice(0,5)));
+    // refresh done by caller
+    return;
+  } else {
+    // Merge into local db only
+    db[entity] = db[entity] || [];
+    for(const it of items){ if(it && Object.keys(it).length) db[entity].push(it); }
+    saveDB();
+    return;
+  }
+}
 byId('resetBtn').addEventListener('click', ()=>{
   if(!confirm("Réinitialiser toutes les données locales ?")) return;
   db=defaultDB(); saveDB(); route();
