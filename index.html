@@ -1274,7 +1274,7 @@ function openCSVMappingModal(headers, rows){
     });
     const selectOptions = ['<option value="">— Ignorer —</option>']
       .concat(headers.map((h,idx)=>`<option value="${idx}" ${idx===guessIndex?'selected':''}>${h}</option>`));
-    return `<div style="margin-bottom:8px"><label style="font-size:12px;color:#c8d5f1">${f}</label><div>${selectOptions.join('')}</div></div>`;
+    return `<div style="margin-bottom:8px"><label style="font-size:12px;color:#c8d5f1">${f}</label><select>${selectOptions.join('')}</select></div>`;
   }).join('');
 
   const previewTable = buildPreviewTable(headers, rows.slice(0,5));
@@ -1303,7 +1303,7 @@ function openCSVMappingModal(headers, rows){
       const guessIndex = headers.findIndex(h => h.toLowerCase().replace(/\s+/g,'').includes(f.toLowerCase()));
       const selectOptions = ['<option value="">— Ignorer —</option>']
         .concat(headers.map((h,idx)=>`<option value="${idx}" ${idx===guessIndex?'selected':''}>${h}</option>`));
-      return `<div style="margin-bottom:8px"><label style="font-size:12px;color:#c8d5f1">${f}</label><div>${selectOptions.join('')}</div></div>`;
+      return `<div style="margin-bottom:8px"><label style="font-size:12px;color:#c8d5f1">${f}</label><select>${selectOptions.join('')}</select></div>`;
     }).join('');
   });
 
