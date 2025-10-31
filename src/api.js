@@ -6,6 +6,8 @@ async function request(method, path, body){
   try{
     const res = await fetch(url, opts);
     const ct = (res.headers.get('content-type')||'').toLowerCase();
+    // If there's no content (204 No Content), return null early
+    if (res.status === 204) return null;
     if(!res.ok){
       // Try to extract a useful error message from JSON or text bodies
       if(ct.includes('application/json')){
@@ -17,17 +19,24 @@ async function request(method, path, body){
         throw new Error(txt || `API ${res.status} ${res.statusText}`);
       }
     }
-    // Be tolerant: if content-type says JSON, parse normally. If not, attempt to
-    // parse the text body as JSON when possible (some serverless deployments
-    // return text/plain even for JSON). This makes the client robust against
-    // incorrect Content-Type headers.
-    if(ct.includes('application/json')) return await res.json();
-    const txt = await res.text();
-    const trimmed = (txt || '').trim();
-    if(trimmed.startsWith('{') || trimmed.startsWith('[')){
-      try{ return JSON.parse(trimmed); }catch(e){ /* fallthrough */ }
+    // Be tolerant: prefer text -> JSON.parse to avoid res.json() throwing on
+    // empty/invalid bodies. Some runtimes return application/json with an
+    // empty body which causes res.json() to throw.
+    try {
+      const txt = await res.text();
+      const trimmed = (txt || '').trim();
+      if(!trimmed) return null;
+      if(ct.includes('application/json') || trimmed.startsWith('{') || trimmed.startsWith('[')){
+        try { return JSON.parse(trimmed); } catch(e){
+          // fallback: return raw text if JSON.parse fails
+          return trimmed;
+        }
+      }
+      return null;
+    } catch(e){
+      console.warn('Failed to read response body', e);
+      return null;
     }
-    return null;
   }catch(err){
     // Propagate the error to the caller. No local simulator fallback.
     console.error(`${method} ${url} failed:`, err);

@@ -1160,16 +1160,28 @@ byId('importInput').addEventListener('change', (e)=>{
     const text = ev.target.result;
     // JSON import (legacy)
     if(file.type.includes('json') || file.name.toLowerCase().endsWith('.json')){
-      try{ const data = JSON.parse(text); if(!data||typeof data!=='object') throw new Error('Fichier JSON invalide'); db = data; saveDB(); route(); alert('Import JSON terminé.'); }
-      catch(err){
-        // If the uploaded file is actually a binary (eg. .xlsx which is a zip/PK archive), show a friendlier message
+      try{
+        const data = JSON.parse(text);
+        if(!data||typeof data!=='object') throw new Error('Fichier JSON invalide');
+        db = data; saveDB(); route(); alert('Import JSON terminé.');
+      }catch(err){
+        // Detect binary (xlsx/zip) first and show friendly message
         const isZip = /^\s*PK/.test(text);
         const hasNull = text.indexOf('\u0000') !== -1;
         if(isZip || hasNull){
           alert("Fichier non-JSON détecté (probablement un fichier Excel .xlsx). Convertissez-le en CSV ou exportez en JSON avant d'importer.");
-        } else {
-          alert('Erreur d\'import JSON: ' + err.message);
+          return;
         }
+        // If the file looks like CSV (contains commas and newlines), fall back to CSV import
+        if(text.indexOf(',') !== -1 && text.indexOf('\n') !== -1){
+          try{
+            const parsed = parseCSV(text);
+            if(!parsed || !parsed.headers || !parsed.rows.length) { alert('CSV vide ou invalide'); return; }
+            openCSVMappingModal(parsed.headers, parsed.rows);
+            return;
+          }catch(e){ /* fallthrough */ }
+        }
+        alert('Erreur d\'import JSON: ' + (err && err.message));
       }
       return;
     }
