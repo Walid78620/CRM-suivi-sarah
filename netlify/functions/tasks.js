@@ -13,6 +13,7 @@ export async function handler(event) {
       if (!p.title) return bad('title is required');
       const q = buildInsert(TABLE, p);
       const { rows } = await pool.query(q.text, q.values);
+      try{ console.log('tasks: inserted id=', rows[0] && rows[0].id); }catch(e){}
       return ok(rows[0], 201);
     }
     if (event.httpMethod === 'PATCH') {

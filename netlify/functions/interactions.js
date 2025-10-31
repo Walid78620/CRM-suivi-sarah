@@ -13,9 +13,9 @@ export async function handler(event) {
     }
     if (event.httpMethod === 'POST') {
       const p = JSON.parse(event.body || '{}');
-      
       const q = buildInsert(TABLE, p);
       const { rows } = await pool.query(q.text, q.values);
+      try{ console.log('interactions: inserted id=', rows[0] && rows[0].id); }catch(e){}
       return ok(rows[0], 201);
     }
     if (event.httpMethod === 'PATCH') {

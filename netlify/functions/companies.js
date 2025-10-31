@@ -22,8 +22,9 @@ export async function handler(event) {
       const p = JSON.parse(event.body || '{}');
       if (!p.name) return bad('name is required');
       const q = buildInsert(TABLE, p);
-      const { rows } = await pool.query(q.text, q.values);
-      return ok(rows[0], 201);
+  const { rows } = await pool.query(q.text, q.values);
+  try{ console.log('companies: inserted id=', rows[0] && rows[0].id); }catch(e){}
+  return ok(rows[0], 201);
     }
     if (event.httpMethod === 'PATCH') {
       const p = JSON.parse(event.body || '{}');
